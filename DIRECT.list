@@ -1,17 +1,4 @@
 # ===============================
-# OKX / 欧易交易所 全部直连
-# ===============================
-
-DOMAIN-SUFFIX, okx.com, DIRECT
-DOMAIN-SUFFIX, okex.com, DIRECT
-DOMAIN-SUFFIX, okx.com.hk, DIRECT
-DOMAIN-SUFFIX, okxapi.com, DIRECT
-DOMAIN-SUFFIX, okexapi.com, DIRECT
-DOMAIN-SUFFIX, okxcdn.com, DIRECT
-DOMAIN-SUFFIX, okexcdn.com, DIRECT
-DOMAIN-SUFFIX, okxusercontent.com, DIRECT
-
-# ===============================
 # Fake IP（Clash.Meta / sing-box）
 # ===============================
 
