@@ -1,9 +1,6 @@
-# Mihomo 订阅模板
-# 将下面的 <SUBSCRIPTION_URL> 替换成你的机场/节点订阅地址。
-# Mihomo 会定期拉取订阅，并由下面的策略组自动选取节点。
-#
-# 如果订阅返回的是标准 Clash/Mihomo 节点列表，可直接使用。
-# interval 单位：秒。
+# ============================================================
+# Mihomo 完整配置
+# ============================================================
 
 mixed-port: 7890
 socks-port: 7891
@@ -12,27 +9,54 @@ mode: Rule
 log-level: info
 external-controller: 127.0.0.1:9090
 
+
+# ============================================================
+# 节点订阅
+# ============================================================
+
 proxy-providers:
+
   节点订阅:
     type: http
     url: "https://www.19981124.xyz/share/sub/sjc?token=sijiache20240305"
     path: ./proxy_providers/sub.yaml
     interval: 86400
+
     health-check:
       enable: true
       url: https://cp.cloudflare.com/generate_204
       interval: 300
       timeout: 5000
 
+
+# ============================================================
+# 基础代理
+# ============================================================
+
 proxies: []
 
+
+# ============================================================
+# 策略组
+# ============================================================
+
 proxy-groups:
+
+  # ----------------------------------------------------------
+  # 🧭 节点选择
+  # ----------------------------------------------------------
+
   - name: 🧭 节点选择
     type: select
     use:
       - 节点订阅
     proxies:
       - 🌍 全局自动
+
+
+  # ----------------------------------------------------------
+  # 🌍 全局自动
+  # ----------------------------------------------------------
 
   - name: 🌍 全局自动
     type: url-test
@@ -42,20 +66,31 @@ proxy-groups:
     interval: 300
     tolerance: 100
 
+
+  # ----------------------------------------------------------
+  # 🌐 Google
+  # ----------------------------------------------------------
+
   - name: 🌐 Google
     type: select
     proxies:
       - 🌐 Google自动
       - 🧭 节点选择
 
+
   - name: 🌐 Google自动
     type: url-test
     use:
       - 节点订阅
-    filter: '^(?=.*(JP|日本|SG|新加坡)).*$'
+    filter: '^(?i).*(新加坡|Singapore|SG|日本|JP|Japan).*'
     url: https://cp.cloudflare.com/generate_204
     interval: 300
     tolerance: 100
+
+
+  # ----------------------------------------------------------
+  # 🤖 ChatGPT / OpenAI
+  # ----------------------------------------------------------
 
   - name: 🤖 ChatGPT
     type: select
@@ -63,14 +98,20 @@ proxy-groups:
       - 🤖 ChatGPT自动
       - 🧭 节点选择
 
+
   - name: 🤖 ChatGPT自动
     type: url-test
     use:
       - 节点订阅
-    filter: '^(?=.*(JP|日本|SG|新加坡|US|美国)).*$'
+    filter: '^(?i).*(新加坡|Singapore|SG|日本|JP|Japan|美国|US|USA|United ?States).*'
     url: https://api.openai.com/v1/models
     interval: 300
     tolerance: 100
+
+
+  # ----------------------------------------------------------
+  # 📨 Telegram
+  # ----------------------------------------------------------
 
   - name: 📨 Telegram
     type: select
@@ -78,14 +119,20 @@ proxy-groups:
       - 📨 Telegram自动
       - 🧭 节点选择
 
+
   - name: 📨 Telegram自动
     type: url-test
     use:
       - 节点订阅
-    filter: '^(?=.*(HK|香港|SG|新加坡)).*$'
+    filter: '^(?i).*(香港|HK|Hong ?Kong|IPLC|新加坡|Singapore|SG).*'
     url: https://cachefly.cachefly.net/10mb.test
     interval: 300
     tolerance: 100
+
+
+  # ----------------------------------------------------------
+  # 📺 YouTube
+  # ----------------------------------------------------------
 
   - name: 📺 YouTube
     type: select
@@ -93,1135 +140,269 @@ proxy-groups:
       - 📺 YouTube自动
       - 🧭 节点选择
 
+
   - name: 📺 YouTube自动
     type: url-test
     use:
       - 节点订阅
-    filter: '^(?=.*(HK|香港|JP|日本|SG|新加坡)).*$'
+    filter: '^(?i).*(新加坡|Singapore|SG|日本|JP|Japan|香港|HK|Hong ?Kong|IPLC|流媒体).*'
     url: https://cachefly.cachefly.net/10mb.test
     interval: 300
     tolerance: 100
+
+
+  # ----------------------------------------------------------
+  # 🟢 直连
+  # ----------------------------------------------------------
 
   - name: 🟢 直连
     type: select
     proxies:
       - DIRECT
 
+
+  # ----------------------------------------------------------
+  # ⛔ 拦截
+  # ----------------------------------------------------------
+
   - name: ⛔ 拦截
     type: select
     proxies:
       - REJECT
 
+
+# ============================================================
+# 远程规则集 Rule Providers
+# ============================================================
+
+rule-providers:
+
+  # ----------------------------------------------------------
+  # 🟢 直连
+  # ----------------------------------------------------------
+
+  Direct-LocalAreaNetwork:
+    type: http
+    url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/LocalAreaNetwork.list"
+    path: ./rule-providers/Direct-LocalAreaNetwork.list
+    interval: 86400
+    behavior: classical
+    format: text
+
+
+  Direct:
+    type: http
+    url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/direct.txt"
+    path: ./rule-providers/Direct.list
+    interval: 86400
+    behavior: classical
+    format: text
+
+
+  Direct-CNCIDR:
+    type: http
+    url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/cncidr.txt"
+    path: ./rule-providers/Direct-CNCIDR.txt
+    interval: 86400
+    behavior: classical
+    format: text
+
+
+  Direct-Private:
+    type: http
+    url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/private.txt"
+    path: ./rule-providers/Direct-Private.txt
+    interval: 86400
+    behavior: classical
+    format: text
+
+
+  Direct-Download:
+    type: http
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Download/Download.list"
+    path: ./rule-providers/Direct-Download.list
+    interval: 86400
+    behavior: classical
+    format: text
+
+
+  Direct-GameDownload:
+    type: http
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Game/GameDownload/GameDownload.list"
+    path: ./rule-providers/Direct-GameDownload.list
+    interval: 86400
+    behavior: classical
+    format: text
+
+
+  Direct-SteamCN:
+    type: http
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/SteamCN/SteamCN.list"
+    path: ./rule-providers/Direct-SteamCN.list
+    interval: 86400
+    behavior: classical
+    format: text
+
+
+  # ----------------------------------------------------------
+  # 💰 加密货币直连
+  # ----------------------------------------------------------
+
+  Direct-Binance:
+    type: http
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Binance/Binance.list"
+    path: ./rule-providers/Direct-Binance.list
+    interval: 86400
+    behavior: classical
+    format: text
+
+
+  Direct-OKX:
+    type: http
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OKX/OKX.list"
+    path: ./rule-providers/Direct-OKX.list
+    interval: 86400
+    behavior: classical
+    format: text
+
+
+  # ----------------------------------------------------------
+  # 🌐 Google
+  # ----------------------------------------------------------
+
+  Google:
+    type: http
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.list"
+    path: ./rule-providers/Google.list
+    interval: 86400
+    behavior: classical
+    format: text
+
+
+  # ----------------------------------------------------------
+  # 🤖 ChatGPT / OpenAI
+  # ----------------------------------------------------------
+
+  ChatGPT:
+    type: http
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.list"
+    path: ./rule-providers/ChatGPT.list
+    interval: 86400
+    behavior: classical
+    format: text
+
+
+  # ----------------------------------------------------------
+  # 📨 Telegram
+  # ----------------------------------------------------------
+
+  Telegram:
+    type: http
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Telegram/Telegram.list"
+    path: ./rule-providers/Telegram.list
+    interval: 86400
+    behavior: classical
+    format: text
+
+
+  # ----------------------------------------------------------
+  # 📺 YouTube
+  # ----------------------------------------------------------
+
+  YouTube:
+    type: http
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube.list"
+    path: ./rule-providers/YouTube.list
+    interval: 86400
+    behavior: classical
+    format: text
+
+
+# ============================================================
+# Rules
+# ============================================================
+
 rules:
+
+  # ----------------------------------------------------------
+  # 🟢 内置直连规则
+  # ----------------------------------------------------------
+
   - GEOSITE,private,🟢 直连
   - GEOIP,LAN,🟢 直连,no-resolve
-  - DOMAIN-SUFFIX,acl4.ssr,🟢 直连
-  - DOMAIN-SUFFIX,ip6-localhost,🟢 直连
-  - DOMAIN-SUFFIX,ip6-loopback,🟢 直连
-  - DOMAIN-SUFFIX,internal,🟢 直连
-  - DOMAIN-SUFFIX,lan,🟢 直连
-  - DOMAIN-SUFFIX,local,🟢 直连
-  - DOMAIN-SUFFIX,localhost,🟢 直连
-  - IP-CIDR,0.0.0.0/8,🟢 直连,no-resolve
-  - IP-CIDR,10.0.0.0/8,🟢 直连,no-resolve
-  - IP-CIDR,100.64.0.0/10,🟢 直连,no-resolve
-  - IP-CIDR,127.0.0.0/8,🟢 直连,no-resolve
-  - IP-CIDR,169.254.0.0/16,🟢 直连,no-resolve
-  - IP-CIDR,172.16.0.0/12,🟢 直连,no-resolve
-  - IP-CIDR,192.168.0.0/16,🟢 直连,no-resolve
-  - IP-CIDR,198.18.0.0/16,🟢 直连,no-resolve
-  - IP-CIDR,224.0.0.0/4,🟢 直连,no-resolve
-  - IP-CIDR6,::1/128,🟢 直连,no-resolve
-  - IP-CIDR6,fc00::/7,🟢 直连,no-resolve
-  - IP-CIDR6,fe80::/10,🟢 直连,no-resolve
-  - IP-CIDR6,fd00::/8,🟢 直连,no-resolve
-  - DOMAIN,instant.arubanetworks.com,🟢 直连
-  - DOMAIN,setmeup.arubanetworks.com,🟢 直连
-  - DOMAIN,router.asus.com,🟢 直连
-  - DOMAIN,www.asusrouter.com,🟢 直连
-  - DOMAIN-SUFFIX,hiwifi.com,🟢 直连
-  - DOMAIN-SUFFIX,leike.cc,🟢 直连
-  - DOMAIN-SUFFIX,miwifi.com,🟢 直连
-  - DOMAIN-SUFFIX,my.router,🟢 直连
-  - DOMAIN-SUFFIX,p.to,🟢 直连
-  - DOMAIN-SUFFIX,peiluyou.com,🟢 直连
-  - DOMAIN-SUFFIX,phicomm.me,🟢 直连
-  - DOMAIN-SUFFIX,router.ctc,🟢 直连
-  - DOMAIN-SUFFIX,routerlogin.com,🟢 直连
-  - DOMAIN-SUFFIX,tendawifi.com,🟢 直连
-  - DOMAIN-SUFFIX,zte.home,🟢 直连
-  - DOMAIN-SUFFIX,tplogin.cn,🟢 直连
-  - DOMAIN-SUFFIX,wifi.cmcc,🟢 直连
+
+
+  # ----------------------------------------------------------
+  # 🟢 局域网
+  # ----------------------------------------------------------
+
+  - RULE-SET,Direct-LocalAreaNetwork,🟢 直连
+
+
+  # ----------------------------------------------------------
+  # 🇨🇳 中国大陆
+  # ----------------------------------------------------------
+
   - GEOSITE,CN,🟢 直连
   - GEOIP,CN,🟢 直连,no-resolve
-  - DOMAIN-SUFFIX,qbittorrent.org,🟢 直连
-  - DOMAIN-KEYWORD,aria2,🟢 直连
-  - DOMAIN-KEYWORD,thunder,🟢 直连
-  - DOMAIN-KEYWORD,xlliveud,🟢 直连
-  - DOMAIN-KEYWORD,xunlei,🟢 直连
-  - DOMAIN-KEYWORD,yunpan,🟢 直连
-  - PROCESS-NAME,BitComet,🟢 直连
-  - PROCESS-NAME,BitComet.exe,🟢 直连
-  - PROCESS-NAME,BitComet_x64.exe,🟢 直连
-  - PROCESS-NAME,DownloadService,🟢 直连
-  - PROCESS-NAME,DownloadService.exe,🟢 直连
-  - PROCESS-NAME,Folx,🟢 直连
-  - PROCESS-NAME,Folx.exe,🟢 直连
-  - PROCESS-NAME,NetTransport,🟢 直连
-  - PROCESS-NAME,NetTransport.exe,🟢 直连
-  - PROCESS-NAME,Thunder,🟢 直连
-  - PROCESS-NAME,Thunder.exe,🟢 直连
-  - PROCESS-NAME,Transmission,🟢 直连
-  - PROCESS-NAME,Transmission.exe,🟢 直连
-  - PROCESS-NAME,WebTorrent,🟢 直连
-  - PROCESS-NAME,WebTorrent.exe,🟢 直连
-  - PROCESS-NAME,WebTorrentHelper,🟢 直连
-  - PROCESS-NAME,WebTorrentHelper.exe,🟢 直连
-  - PROCESS-NAME,Weiyun,🟢 直连
-  - PROCESS-NAME,Weiyun.exe,🟢 直连
-  - PROCESS-NAME,aria2c,🟢 直连
-  - PROCESS-NAME,aria2c.exe,🟢 直连
-  - PROCESS-NAME,baidunetdisk.exe,🟢 直连
-  - PROCESS-NAME,fdm,🟢 直连
-  - PROCESS-NAME,fdm.exe,🟢 直连
-  - PROCESS-NAME,qbittorrent,🟢 直连
-  - PROCESS-NAME,qbittorrent.exe,🟢 直连
-  - PROCESS-NAME,uTorrent,🟢 直连
-  - PROCESS-NAME,uTorrent.exe,🟢 直连
-  - DOMAIN,assets1.xboxlive.com,🟢 直连
-  - DOMAIN,assets2.xboxlive.com,🟢 直连
-  - DOMAIN,blizzard.gcdn.cloudn.co.kr,🟢 直连
-  - DOMAIN,blzddist1-a.akamaihd.net,🟢 直连
-  - DOMAIN,blzddistkr1-a.akamaihd.net,🟢 直连
-  - DOMAIN,client.hikarifield.co.jp,🟢 直连
-  - DOMAIN,content.cdp.bethesda.net,🟢 直连
-  - DOMAIN,download.cdp.bethesda.net,🟢 直连
-  - DOMAIN,download.dm.origin.com,🟢 直连
-  - DOMAIN,download.epicgames.com,🟢 直连
-  - DOMAIN,download.hikarifield.co.jp,🟢 直连
-  - DOMAIN,download2.epicgames.com,🟢 直连
-  - DOMAIN,download3.epicgames.com,🟢 直连
-  - DOMAIN,download4.epicgames.com,🟢 直连
-  - DOMAIN,edge.steam-dns.top.comcast.net,🟢 直连
-  - DOMAIN,epicgames-download1.akamaized.net,🟢 直连
-  - DOMAIN,eu.cdn.blizzard.com,🟢 直连
-  - DOMAIN,fastly-download.epicgames.com,🟢 直连
-  - DOMAIN,gamedownloads-rockstargames-com.akamaized.net,🟢 直连
-  - DOMAIN,gog-cdn-lumen.secure2.footprint.net,🟢 直连
-  - DOMAIN,kr.cdn.blizzard.com,🟢 直连
-  - DOMAIN,level3.blizzard.com,🟢 直连
-  - DOMAIN,origin-a.akamaihd.net,🟢 直连
-  - DOMAIN,packagespc.xboxlive.com,🟢 直连
-  - DOMAIN,ssl-lvlt.cdn.ea.com,🟢 直连
-  - DOMAIN,steam.eca.qtlglb.com,🟢 直连
-  - DOMAIN,steam.naeu.qtlglb.com,🟢 直连
-  - DOMAIN,steam.ru.qtlglb.com,🟢 直连
-  - DOMAIN,steampipe-kr.akamaized.net,🟢 直连
-  - DOMAIN,steampipe-partner.akamaized.net,🟢 直连
-  - DOMAIN,steampipe.akamaized.net,🟢 直连
-  - DOMAIN,steamusercontent-a.akamaihd.net,🟢 直连
-  - DOMAIN,uplaypc-s-ubisoft.cdn.ubionline.com.cn,🟢 直连
-  - DOMAIN,us.cdn.blizzard.com,🟢 直连
-  - DOMAIN,xvcf1.xboxlive.com,🟢 直连
-  - DOMAIN,xvcf2.xboxlive.com,🟢 直连
-  - DOMAIN-SUFFIX,cdn.ubi.com,🟢 直连
-  - DOMAIN-SUFFIX,dyn.riotcdn.net,🟢 直连
-  - DOMAIN-SUFFIX,steamcontent.com,🟢 直连
-  - DOMAIN,csgo.wmsj.cn,🟢 直连
-  - DOMAIN,dl.steam.clngaa.com,🟢 直连
-  - DOMAIN,dl.steam.ksyna.com,🟢 直连
-  - DOMAIN,dota2.wmsj.cn,🟢 直连
-  - DOMAIN,st.dl.bscstorage.net,🟢 直连
-  - DOMAIN,st.dl.eccdnx.com,🟢 直连
-  - DOMAIN,st.dl.pinyuncloud.com,🟢 直连
-  - DOMAIN,steampipe.steamcontent.tnkjmec.com,🟢 直连
-  - DOMAIN,steampowered.com.8686c.com,🟢 直连
-  - DOMAIN,steamstatic.com.8686c.com,🟢 直连
-  - DOMAIN,wmsjsteam.com,🟢 直连
-  - DOMAIN,xz.pphimalayanrt.com,🟢 直连
-  - DOMAIN-SUFFIX,cm.steampowered.com,🟢 直连
-  - DOMAIN-SUFFIX,steamchina.com,🟢 直连
-  - DOMAIN-SUFFIX,steamcontent.com,🟢 直连
-  - DOMAIN-SUFFIX,steamserver.net,🟢 直连
-  - DOMAIN-SUFFIX,steamusercontent.com,🟢 直连
-  - DOMAIN-SUFFIX,appsflayer.com,🟢 直连
-  - DOMAIN-SUFFIX,binance.cloud,🟢 直连
-  - DOMAIN-SUFFIX,binance.com,🟢 直连
-  - DOMAIN-SUFFIX,binance.me,🟢 直连
-  - DOMAIN-SUFFIX,binancecnt.com,🟢 直连
-  - DOMAIN-SUFFIX,binancefuture.com,🟢 直连
-  - DOMAIN-SUFFIX,bnappzh.co,🟢 直连
-  - DOMAIN-SUFFIX,bnbstatic.com,🟢 直连
-  - DOMAIN-SUFFIX,bnbzh.ac,🟢 直连
-  - DOMAIN-SUFFIX,bntrace.com,🟢 直连
-  - DOMAIN-SUFFIX,saasexch.cc,🟢 直连
-  - DOMAIN-SUFFIX,saasexch.com,🟢 直连
-  - DOMAIN-SUFFIX,okex.com,🟢 直连
-  - DOMAIN-SUFFIX,oklink.com,🟢 直连
-  - DOMAIN-SUFFIX,okx.com,🟢 直连
-  - DOMAIN,voice.telephony.goog,🌐 Google
-  - DOMAIN-SUFFIX,0emm.com,🌐 Google
-  - DOMAIN-SUFFIX,1e100.net,🌐 Google
-  - DOMAIN-SUFFIX,1ucrs.com,🌐 Google
-  - DOMAIN-SUFFIX,265.com,🌐 Google
-  - DOMAIN-SUFFIX,2mdn-cn.net,🌐 Google
-  - DOMAIN-SUFFIX,2mdn.net,🌐 Google
-  - DOMAIN-SUFFIX,466453.com,🌐 Google
-  - DOMAIN-SUFFIX,abc.xyz,🌐 Google
-  - DOMAIN-SUFFIX,adgoogle.net,🌐 Google
-  - DOMAIN-SUFFIX,admeld.com,🌐 Google
-  - DOMAIN-SUFFIX,admob-cn.com,🌐 Google
-  - DOMAIN-SUFFIX,admob.com,🌐 Google
-  - DOMAIN-SUFFIX,adsense.com,🌐 Google
-  - DOMAIN-SUFFIX,adsensecustomsearchads.com,🌐 Google
-  - DOMAIN-SUFFIX,adsenseformobileapps.com,🌐 Google
-  - DOMAIN-SUFFIX,advertisercommunity.com,🌐 Google
-  - DOMAIN-SUFFIX,advertiserscommunity.com,🌐 Google
-  - DOMAIN-SUFFIX,adwords-community.com,🌐 Google
-  - DOMAIN-SUFFIX,adwords.com,🌐 Google
-  - DOMAIN-SUFFIX,adwordsexpress.com,🌐 Google
-  - DOMAIN-SUFFIX,amp.dev,🌐 Google
-  - DOMAIN-SUFFIX,ampproject.com,🌐 Google
-  - DOMAIN-SUFFIX,ampproject.net,🌐 Google
-  - DOMAIN-SUFFIX,ampproject.org,🌐 Google
-  - DOMAIN-SUFFIX,android.com,🌐 Google
-  - DOMAIN-SUFFIX,androidify.com,🌐 Google
-  - DOMAIN-SUFFIX,androidtv.com,🌐 Google
-  - DOMAIN-SUFFIX,angulardart.org,🌐 Google
-  - DOMAIN-SUFFIX,api.ai,🌐 Google
-  - DOMAIN-SUFFIX,apigee.com,🌐 Google
-  - DOMAIN-SUFFIX,app-analytics-services.com,🌐 Google
-  - DOMAIN-SUFFIX,app-measurement-cn.com,🌐 Google
-  - DOMAIN-SUFFIX,app-measurement.com,🌐 Google
-  - DOMAIN-SUFFIX,app-measurement.net,🌐 Google
-  - DOMAIN-SUFFIX,appbridge.ca,🌐 Google
-  - DOMAIN-SUFFIX,appbridge.io,🌐 Google
-  - DOMAIN-SUFFIX,appbridge.it,🌐 Google
-  - DOMAIN-SUFFIX,apps5.oingo.com,🌐 Google
-  - DOMAIN-SUFFIX,appspot.com,🌐 Google
-  - DOMAIN-SUFFIX,apture.com,🌐 Google
-  - DOMAIN-SUFFIX,area120.com,🌐 Google
-  - DOMAIN-SUFFIX,asp-cc.com,🌐 Google
-  - DOMAIN-SUFFIX,autodraw.com,🌐 Google
-  - DOMAIN-SUFFIX,avail.googleflights.net,🌐 Google
-  - DOMAIN-SUFFIX,bandpage.com,🌐 Google
-  - DOMAIN-SUFFIX,baselinestudy.com,🌐 Google
-  - DOMAIN-SUFFIX,baselinestudy.org,🌐 Google
-  - DOMAIN-SUFFIX,bazel.build,🌐 Google
-  - DOMAIN-SUFFIX,bdn.dev,🌐 Google
-  - DOMAIN-SUFFIX,beacons.gvt2.com,🌐 Google
-  - DOMAIN-SUFFIX,beacons2.gvt2.com,🌐 Google
-  - DOMAIN-SUFFIX,beacons3.gvt2.com,🌐 Google
-  - DOMAIN-SUFFIX,beatthatquote.com,🌐 Google
-  - DOMAIN-SUFFIX,blink.org,🌐 Google
-  - DOMAIN-SUFFIX,blog.google,🌐 Google
-  - DOMAIN-SUFFIX,blogblog.com,🌐 Google
-  - DOMAIN-SUFFIX,blogger.com,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.ae,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.al,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.am,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.ba,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.be,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.bg,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.bj,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.ca,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.cf,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.ch,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.cl,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.co.at,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.co.id,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.co.il,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.co.ke,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.co.nz,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.co.uk,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.co.za,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.com,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.com.ar,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.com.au,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.com.br,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.com.by,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.com.co,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.com.cy,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.com.ee,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.com.eg,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.com.es,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.com.mt,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.com.ng,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.com.tr,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.com.uy,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.cv,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.cz,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.de,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.dk,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.fi,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.fr,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.gr,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.hk,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.hr,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.hu,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.ie,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.in,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.is,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.it,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.jp,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.kr,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.li,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.lt,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.lu,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.md,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.mk,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.mx,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.my,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.nl,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.no,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.pe,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.pt,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.qa,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.re,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.ro,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.rs,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.ru,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.se,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.sg,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.si,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.sk,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.sn,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.td,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.tw,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.ug,🌐 Google
-  - DOMAIN-SUFFIX,blogspot.vn,🌐 Google
-  - DOMAIN-SUFFIX,brocaproject.com,🌐 Google
-  - DOMAIN-SUFFIX,brotli.org,🌐 Google
-  - DOMAIN-SUFFIX,bumpshare.com,🌐 Google
-  - DOMAIN-SUFFIX,bumptop.ca,🌐 Google
-  - DOMAIN-SUFFIX,bumptop.com,🌐 Google
-  - DOMAIN-SUFFIX,bumptop.net,🌐 Google
-  - DOMAIN-SUFFIX,bumptop.org,🌐 Google
-  - DOMAIN-SUFFIX,bumptunes.com,🌐 Google
-  - DOMAIN-SUFFIX,c.gle,🌐 Google
-  - DOMAIN-SUFFIX,campuslondon.com,🌐 Google
-  - DOMAIN-SUFFIX,capitalg.com,🌐 Google
-  - DOMAIN-SUFFIX,certificate-transparency.dev,🌐 Google
-  - DOMAIN-SUFFIX,certificate-transparency.org,🌐 Google
-  - DOMAIN-SUFFIX,charlestonroadregistry.com,🌐 Google
-  - DOMAIN-SUFFIX,chat.gle,🌐 Google
-  - DOMAIN-SUFFIX,chrome.com,🌐 Google
-  - DOMAIN-SUFFIX,chromebook.com,🌐 Google
-  - DOMAIN-SUFFIX,chromecast.com,🌐 Google
-  - DOMAIN-SUFFIX,chromeexperiments.com,🌐 Google
-  - DOMAIN-SUFFIX,chromeos.dev,🌐 Google
-  - DOMAIN-SUFFIX,chromercise.com,🌐 Google
-  - DOMAIN-SUFFIX,chromestatus.com,🌐 Google
-  - DOMAIN-SUFFIX,chromium.org,🌐 Google
-  - DOMAIN-SUFFIX,chronicle.security,🌐 Google
-  - DOMAIN-SUFFIX,chroniclesec.com,🌐 Google
-  - DOMAIN-SUFFIX,clickserve.cc-dt.com,🌐 Google
-  - DOMAIN-SUFFIX,clickserver.googleads.com,🌐 Google
-  - DOMAIN-SUFFIX,cloudburstresearch.com,🌐 Google
-  - DOMAIN-SUFFIX,cloudfunctions.net,🌐 Google
-  - DOMAIN-SUFFIX,cloudproxy.app,🌐 Google
-  - DOMAIN-SUFFIX,cloudrobotics.com,🌐 Google
-  - DOMAIN-SUFFIX,cobrasearch.com,🌐 Google
-  - DOMAIN-SUFFIX,codespot.com,🌐 Google
-  - DOMAIN-SUFFIX,conscrypt.com,🌐 Google
-  - DOMAIN-SUFFIX,conscrypt.org,🌐 Google
-  - DOMAIN-SUFFIX,cookiechoices.org,🌐 Google
-  - DOMAIN-SUFFIX,coova.com,🌐 Google
-  - DOMAIN-SUFFIX,coova.net,🌐 Google
-  - DOMAIN-SUFFIX,coova.org,🌐 Google
-  - DOMAIN-SUFFIX,crashlytics.com,🌐 Google
-  - DOMAIN-SUFFIX,crbug.com,🌐 Google
-  - DOMAIN-SUFFIX,creativelab5.com,🌐 Google
-  - DOMAIN-SUFFIX,crossmediapanel.com,🌐 Google
-  - DOMAIN-SUFFIX,crr.com,🌐 Google
-  - DOMAIN-SUFFIX,crrev.com,🌐 Google
-  - DOMAIN-SUFFIX,cs4hs.com,🌐 Google
-  - DOMAIN-SUFFIX,dart.dev,🌐 Google
-  - DOMAIN-SUFFIX,dartlang.org,🌐 Google
-  - DOMAIN-SUFFIX,dartpad.dev,🌐 Google
-  - DOMAIN-SUFFIX,dartsearch-cn.net,🌐 Google
-  - DOMAIN-SUFFIX,dartsearch.net,🌐 Google
-  - DOMAIN-SUFFIX,data-vocabulary.org,🌐 Google
-  - DOMAIN-SUFFIX,dataliberation.org,🌐 Google
-  - DOMAIN-SUFFIX,debug.com,🌐 Google
-  - DOMAIN-SUFFIX,debugproject.com,🌐 Google
-  - DOMAIN-SUFFIX,deepmind.com,🌐 Google
-  - DOMAIN-SUFFIX,deja.com,🌐 Google
-  - DOMAIN-SUFFIX,deps.dev,🌐 Google
-  - DOMAIN-SUFFIX,deps.info,🌐 Google
-  - DOMAIN-SUFFIX,devsitetest.how,🌐 Google
-  - DOMAIN-SUFFIX,dialogflow.com,🌐 Google
-  - DOMAIN-SUFFIX,digisfera.com,🌐 Google
-  - DOMAIN-SUFFIX,digitalassetlinks.org,🌐 Google
-  - DOMAIN-SUFFIX,digitalattackmap.com,🌐 Google
-  - DOMAIN-SUFFIX,doubleclick-cn.net,🌐 Google
-  - DOMAIN-SUFFIX,doubleclick.com,🌐 Google
-  - DOMAIN-SUFFIX,doubleclick.net,🌐 Google
-  - DOMAIN-SUFFIX,episodic.com,🌐 Google
-  - DOMAIN-SUFFIX,fastlane.ci,🌐 Google
-  - DOMAIN-SUFFIX,fastlane.tools,🌐 Google
-  - DOMAIN-SUFFIX,feedburner.com,🌐 Google
-  - DOMAIN-SUFFIX,fflick.com,🌐 Google
-  - DOMAIN-SUFFIX,financeleadsonline.com,🌐 Google
-  - DOMAIN-SUFFIX,firebaseapp.com,🌐 Google
-  - DOMAIN-SUFFIX,firebaseio.com,🌐 Google
-  - DOMAIN-SUFFIX,flutter.dev,🌐 Google
-  - DOMAIN-SUFFIX,flutterapp.com,🌐 Google
-  - DOMAIN-SUFFIX,foofle.com,🌐 Google
-  - DOMAIN-SUFFIX,froogle.com,🌐 Google
-  - DOMAIN-SUFFIX,fuchsia.dev,🌐 Google
-  - DOMAIN-SUFFIX,g-tun.com,🌐 Google
-  - DOMAIN-SUFFIX,g.cn,🌐 Google
-  - DOMAIN-SUFFIX,g.co,🌐 Google
-  - DOMAIN-SUFFIX,g.dev,🌐 Google
-  - DOMAIN-SUFFIX,g.page,🌐 Google
-  - DOMAIN-SUFFIX,gateway.dev,🌐 Google
-  - DOMAIN-SUFFIX,gcp.gvt2.com,🌐 Google
-  - DOMAIN-SUFFIX,gcr.io,🌐 Google
-  - DOMAIN-SUFFIX,gerritcodereview.com,🌐 Google
-  - DOMAIN-SUFFIX,get.app,🌐 Google
-  - DOMAIN-SUFFIX,get.dev,🌐 Google
-  - DOMAIN-SUFFIX,get.how,🌐 Google
-  - DOMAIN-SUFFIX,get.page,🌐 Google
-  - DOMAIN-SUFFIX,getbumptop.com,🌐 Google
-  - DOMAIN-SUFFIX,getmdl.io,🌐 Google
-  - DOMAIN-SUFFIX,getoutline.org,🌐 Google
-  - DOMAIN-SUFFIX,ggoogle.com,🌐 Google
-  - DOMAIN-SUFFIX,gipscorp.com,🌐 Google
-  - DOMAIN-SUFFIX,gkecnapps.cn,🌐 Google
-  - DOMAIN-SUFFIX,globaledu.org,🌐 Google
-  - DOMAIN-SUFFIX,gmail.com,🌐 Google
-  - DOMAIN-SUFFIX,gmodules.com,🌐 Google
-  - DOMAIN-SUFFIX,go-lang.com,🌐 Google
-  - DOMAIN-SUFFIX,go-lang.net,🌐 Google
-  - DOMAIN-SUFFIX,go-lang.org,🌐 Google
-  - DOMAIN-SUFFIX,go.dev,🌐 Google
-  - DOMAIN-SUFFIX,godoc.org,🌐 Google
-  - DOMAIN-SUFFIX,gogle.com,🌐 Google
-  - DOMAIN-SUFFIX,gogole.com,🌐 Google
-  - DOMAIN-SUFFIX,golang.com,🌐 Google
-  - DOMAIN-SUFFIX,golang.net,🌐 Google
-  - DOMAIN-SUFFIX,golang.org,🌐 Google
-  - DOMAIN-SUFFIX,gonglchuangl.net,🌐 Google
-  - DOMAIN-SUFFIX,gongyichuangyi.net,🌐 Google
-  - DOMAIN-SUFFIX,goo.gl,🌐 Google
-  - DOMAIN-SUFFIX,googel.com,🌐 Google
-  - DOMAIN-SUFFIX,googil.com,🌐 Google
-  - DOMAIN-SUFFIX,googl.com,🌐 Google
-  - DOMAIN-SUFFIX,google-analytics-cn.com,🌐 Google
-  - DOMAIN-SUFFIX,google-analytics.com,🌐 Google
-  - DOMAIN-SUFFIX,google-syndication.com,🌐 Google
-  - DOMAIN-SUFFIX,google.ad,🌐 Google
-  - DOMAIN-SUFFIX,google.ae,🌐 Google
-  - DOMAIN-SUFFIX,google.al,🌐 Google
-  - DOMAIN-SUFFIX,google.am,🌐 Google
-  - DOMAIN-SUFFIX,google.as,🌐 Google
-  - DOMAIN-SUFFIX,google.at,🌐 Google
-  - DOMAIN-SUFFIX,google.az,🌐 Google
-  - DOMAIN-SUFFIX,google.ba,🌐 Google
-  - DOMAIN-SUFFIX,google.be,🌐 Google
-  - DOMAIN-SUFFIX,google.berlin,🌐 Google
-  - DOMAIN-SUFFIX,google.bf,🌐 Google
-  - DOMAIN-SUFFIX,google.bg,🌐 Google
-  - DOMAIN-SUFFIX,google.bi,🌐 Google
-  - DOMAIN-SUFFIX,google.bj,🌐 Google
-  - DOMAIN-SUFFIX,google.bs,🌐 Google
-  - DOMAIN-SUFFIX,google.bt,🌐 Google
-  - DOMAIN-SUFFIX,google.by,🌐 Google
-  - DOMAIN-SUFFIX,google.ca,🌐 Google
-  - DOMAIN-SUFFIX,google.cat,🌐 Google
-  - DOMAIN-SUFFIX,google.cd,🌐 Google
-  - DOMAIN-SUFFIX,google.cf,🌐 Google
-  - DOMAIN-SUFFIX,google.cg,🌐 Google
-  - DOMAIN-SUFFIX,google.ch,🌐 Google
-  - DOMAIN-SUFFIX,google.ci,🌐 Google
-  - DOMAIN-SUFFIX,google.cl,🌐 Google
-  - DOMAIN-SUFFIX,google.cm,🌐 Google
-  - DOMAIN-SUFFIX,google.cn,🌐 Google
-  - DOMAIN-SUFFIX,google.co.ao,🌐 Google
-  - DOMAIN-SUFFIX,google.co.bw,🌐 Google
-  - DOMAIN-SUFFIX,google.co.ck,🌐 Google
-  - DOMAIN-SUFFIX,google.co.cr,🌐 Google
-  - DOMAIN-SUFFIX,google.co.id,🌐 Google
-  - DOMAIN-SUFFIX,google.co.il,🌐 Google
-  - DOMAIN-SUFFIX,google.co.in,🌐 Google
-  - DOMAIN-SUFFIX,google.co.jp,🌐 Google
-  - DOMAIN-SUFFIX,google.co.ke,🌐 Google
-  - DOMAIN-SUFFIX,google.co.kr,🌐 Google
-  - DOMAIN-SUFFIX,google.co.ls,🌐 Google
-  - DOMAIN-SUFFIX,google.co.ma,🌐 Google
-  - DOMAIN-SUFFIX,google.co.mz,🌐 Google
-  - DOMAIN-SUFFIX,google.co.nz,🌐 Google
-  - DOMAIN-SUFFIX,google.co.th,🌐 Google
-  - DOMAIN-SUFFIX,google.co.tz,🌐 Google
-  - DOMAIN-SUFFIX,google.co.ug,🌐 Google
-  - DOMAIN-SUFFIX,google.co.uk,🌐 Google
-  - DOMAIN-SUFFIX,google.co.uz,🌐 Google
-  - DOMAIN-SUFFIX,google.co.ve,🌐 Google
-  - DOMAIN-SUFFIX,google.co.vi,🌐 Google
-  - DOMAIN-SUFFIX,google.co.za,🌐 Google
-  - DOMAIN-SUFFIX,google.co.zm,🌐 Google
-  - DOMAIN-SUFFIX,google.co.zw,🌐 Google
-  - DOMAIN-SUFFIX,google.com,🌐 Google
-  - DOMAIN-SUFFIX,google.com.af,🌐 Google
-  - DOMAIN-SUFFIX,google.com.ag,🌐 Google
-  - DOMAIN-SUFFIX,google.com.ai,🌐 Google
-  - DOMAIN-SUFFIX,google.com.ar,🌐 Google
-  - DOMAIN-SUFFIX,google.com.au,🌐 Google
-  - DOMAIN-SUFFIX,google.com.bd,🌐 Google
-  - DOMAIN-SUFFIX,google.com.bh,🌐 Google
-  - DOMAIN-SUFFIX,google.com.bn,🌐 Google
-  - DOMAIN-SUFFIX,google.com.bo,🌐 Google
-  - DOMAIN-SUFFIX,google.com.br,🌐 Google
-  - DOMAIN-SUFFIX,google.com.bz,🌐 Google
-  - DOMAIN-SUFFIX,google.com.co,🌐 Google
-  - DOMAIN-SUFFIX,google.com.cu,🌐 Google
-  - DOMAIN-SUFFIX,google.com.cy,🌐 Google
-  - DOMAIN-SUFFIX,google.com.do,🌐 Google
-  - DOMAIN-SUFFIX,google.com.ec,🌐 Google
-  - DOMAIN-SUFFIX,google.com.eg,🌐 Google
-  - DOMAIN-SUFFIX,google.com.et,🌐 Google
-  - DOMAIN-SUFFIX,google.com.fj,🌐 Google
-  - DOMAIN-SUFFIX,google.com.gh,🌐 Google
-  - DOMAIN-SUFFIX,google.com.gi,🌐 Google
-  - DOMAIN-SUFFIX,google.com.gt,🌐 Google
-  - DOMAIN-SUFFIX,google.com.hk,🌐 Google
-  - DOMAIN-SUFFIX,google.com.jm,🌐 Google
-  - DOMAIN-SUFFIX,google.com.kh,🌐 Google
-  - DOMAIN-SUFFIX,google.com.kw,🌐 Google
-  - DOMAIN-SUFFIX,google.com.lb,🌐 Google
-  - DOMAIN-SUFFIX,google.com.ly,🌐 Google
-  - DOMAIN-SUFFIX,google.com.mm,🌐 Google
-  - DOMAIN-SUFFIX,google.com.mt,🌐 Google
-  - DOMAIN-SUFFIX,google.com.mx,🌐 Google
-  - DOMAIN-SUFFIX,google.com.my,🌐 Google
-  - DOMAIN-SUFFIX,google.com.na,🌐 Google
-  - DOMAIN-SUFFIX,google.com.ng,🌐 Google
-  - DOMAIN-SUFFIX,google.com.ni,🌐 Google
-  - DOMAIN-SUFFIX,google.com.np,🌐 Google
-  - DOMAIN-SUFFIX,google.com.om,🌐 Google
-  - DOMAIN-SUFFIX,google.com.pa,🌐 Google
-  - DOMAIN-SUFFIX,google.com.pe,🌐 Google
-  - DOMAIN-SUFFIX,google.com.pg,🌐 Google
-  - DOMAIN-SUFFIX,google.com.ph,🌐 Google
-  - DOMAIN-SUFFIX,google.com.pk,🌐 Google
-  - DOMAIN-SUFFIX,google.com.pr,🌐 Google
-  - DOMAIN-SUFFIX,google.com.py,🌐 Google
-  - DOMAIN-SUFFIX,google.com.qa,🌐 Google
-  - DOMAIN-SUFFIX,google.com.sa,🌐 Google
-  - DOMAIN-SUFFIX,google.com.sb,🌐 Google
-  - DOMAIN-SUFFIX,google.com.sg,🌐 Google
-  - DOMAIN-SUFFIX,google.com.sl,🌐 Google
-  - DOMAIN-SUFFIX,google.com.sv,🌐 Google
-  - DOMAIN-SUFFIX,google.com.tj,🌐 Google
-  - DOMAIN-SUFFIX,google.com.tr,🌐 Google
-  - DOMAIN-SUFFIX,google.com.tw,🌐 Google
-  - DOMAIN-SUFFIX,google.com.ua,🌐 Google
-  - DOMAIN-SUFFIX,google.com.uy,🌐 Google
-  - DOMAIN-SUFFIX,google.com.vc,🌐 Google
-  - DOMAIN-SUFFIX,google.com.vn,🌐 Google
-  - DOMAIN-SUFFIX,google.cv,🌐 Google
-  - DOMAIN-SUFFIX,google.cz,🌐 Google
-  - DOMAIN-SUFFIX,google.de,🌐 Google
-  - DOMAIN-SUFFIX,google.dev,🌐 Google
-  - DOMAIN-SUFFIX,google.dj,🌐 Google
-  - DOMAIN-SUFFIX,google.dk,🌐 Google
-  - DOMAIN-SUFFIX,google.dm,🌐 Google
-  - DOMAIN-SUFFIX,google.dz,🌐 Google
-  - DOMAIN-SUFFIX,google.ee,🌐 Google
-  - DOMAIN-SUFFIX,google.es,🌐 Google
-  - DOMAIN-SUFFIX,google.fi,🌐 Google
-  - DOMAIN-SUFFIX,google.fm,🌐 Google
-  - DOMAIN-SUFFIX,google.fr,🌐 Google
-  - DOMAIN-SUFFIX,google.ga,🌐 Google
-  - DOMAIN-SUFFIX,google.ge,🌐 Google
-  - DOMAIN-SUFFIX,google.gg,🌐 Google
-  - DOMAIN-SUFFIX,google.gl,🌐 Google
-  - DOMAIN-SUFFIX,google.gm,🌐 Google
-  - DOMAIN-SUFFIX,google.gr,🌐 Google
-  - DOMAIN-SUFFIX,google.gy,🌐 Google
-  - DOMAIN-SUFFIX,google.hn,🌐 Google
-  - DOMAIN-SUFFIX,google.hr,🌐 Google
-  - DOMAIN-SUFFIX,google.ht,🌐 Google
-  - DOMAIN-SUFFIX,google.hu,🌐 Google
-  - DOMAIN-SUFFIX,google.ie,🌐 Google
-  - DOMAIN-SUFFIX,google.im,🌐 Google
-  - DOMAIN-SUFFIX,google.iq,🌐 Google
-  - DOMAIN-SUFFIX,google.is,🌐 Google
-  - DOMAIN-SUFFIX,google.it,🌐 Google
-  - DOMAIN-SUFFIX,google.je,🌐 Google
-  - DOMAIN-SUFFIX,google.jo,🌐 Google
-  - DOMAIN-SUFFIX,google.kg,🌐 Google
-  - DOMAIN-SUFFIX,google.ki,🌐 Google
-  - DOMAIN-SUFFIX,google.kz,🌐 Google
-  - DOMAIN-SUFFIX,google.la,🌐 Google
-  - DOMAIN-SUFFIX,google.li,🌐 Google
-  - DOMAIN-SUFFIX,google.lk,🌐 Google
-  - DOMAIN-SUFFIX,google.lt,🌐 Google
-  - DOMAIN-SUFFIX,google.lu,🌐 Google
-  - DOMAIN-SUFFIX,google.lv,🌐 Google
-  - DOMAIN-SUFFIX,google.md,🌐 Google
-  - DOMAIN-SUFFIX,google.me,🌐 Google
-  - DOMAIN-SUFFIX,google.mg,🌐 Google
-  - DOMAIN-SUFFIX,google.mk,🌐 Google
-  - DOMAIN-SUFFIX,google.ml,🌐 Google
-  - DOMAIN-SUFFIX,google.mn,🌐 Google
-  - DOMAIN-SUFFIX,google.ms,🌐 Google
-  - DOMAIN-SUFFIX,google.mu,🌐 Google
-  - DOMAIN-SUFFIX,google.mv,🌐 Google
-  - DOMAIN-SUFFIX,google.mw,🌐 Google
-  - DOMAIN-SUFFIX,google.ne,🌐 Google
-  - DOMAIN-SUFFIX,google.net,🌐 Google
-  - DOMAIN-SUFFIX,google.nl,🌐 Google
-  - DOMAIN-SUFFIX,google.no,🌐 Google
-  - DOMAIN-SUFFIX,google.nr,🌐 Google
-  - DOMAIN-SUFFIX,google.nu,🌐 Google
-  - DOMAIN-SUFFIX,google.org,🌐 Google
-  - DOMAIN-SUFFIX,google.pl,🌐 Google
-  - DOMAIN-SUFFIX,google.pn,🌐 Google
-  - DOMAIN-SUFFIX,google.ps,🌐 Google
-  - DOMAIN-SUFFIX,google.pt,🌐 Google
-  - DOMAIN-SUFFIX,google.ro,🌐 Google
-  - DOMAIN-SUFFIX,google.rs,🌐 Google
-  - DOMAIN-SUFFIX,google.ru,🌐 Google
-  - DOMAIN-SUFFIX,google.rw,🌐 Google
-  - DOMAIN-SUFFIX,google.sc,🌐 Google
-  - DOMAIN-SUFFIX,google.se,🌐 Google
-  - DOMAIN-SUFFIX,google.sh,🌐 Google
-  - DOMAIN-SUFFIX,google.si,🌐 Google
-  - DOMAIN-SUFFIX,google.sk,🌐 Google
-  - DOMAIN-SUFFIX,google.sm,🌐 Google
-  - DOMAIN-SUFFIX,google.sn,🌐 Google
-  - DOMAIN-SUFFIX,google.so,🌐 Google
-  - DOMAIN-SUFFIX,google.sr,🌐 Google
-  - DOMAIN-SUFFIX,google.st,🌐 Google
-  - DOMAIN-SUFFIX,google.td,🌐 Google
-  - DOMAIN-SUFFIX,google.tg,🌐 Google
-  - DOMAIN-SUFFIX,google.tl,🌐 Google
-  - DOMAIN-SUFFIX,google.tm,🌐 Google
-  - DOMAIN-SUFFIX,google.tn,🌐 Google
-  - DOMAIN-SUFFIX,google.to,🌐 Google
-  - DOMAIN-SUFFIX,google.tt,🌐 Google
-  - DOMAIN-SUFFIX,google.ventures,🌐 Google
-  - DOMAIN-SUFFIX,google.vg,🌐 Google
-  - DOMAIN-SUFFIX,google.vu,🌐 Google
-  - DOMAIN-SUFFIX,google.ws,🌐 Google
-  - DOMAIN-SUFFIX,googleacquisitionmigration.com,🌐 Google
-  - DOMAIN-SUFFIX,googleadapis.com,🌐 Google
-  - DOMAIN-SUFFIX,googleadservices-cn.com,🌐 Google
-  - DOMAIN-SUFFIX,googleadservices.com,🌐 Google
-  - DOMAIN-SUFFIX,googleanalytics.com,🌐 Google
-  - DOMAIN-SUFFIX,googleapis-cn.com,🌐 Google
-  - DOMAIN-SUFFIX,googleapis.cn,🌐 Google
-  - DOMAIN-SUFFIX,googleapis.com,🌐 Google
-  - DOMAIN-SUFFIX,googleapps-cn.com,🌐 Google
-  - DOMAIN-SUFFIX,googleapps.com,🌐 Google
-  - DOMAIN-SUFFIX,googlearth.com,🌐 Google
-  - DOMAIN-SUFFIX,googleblog.com,🌐 Google
-  - DOMAIN-SUFFIX,googlebot.com,🌐 Google
-  - DOMAIN-SUFFIX,googlecapital.com,🌐 Google
-  - DOMAIN-SUFFIX,googlecert.net,🌐 Google
-  - DOMAIN-SUFFIX,googlecnapps.cn,🌐 Google
-  - DOMAIN-SUFFIX,googlecode.com,🌐 Google
-  - DOMAIN-SUFFIX,googlecommerce.com,🌐 Google
-  - DOMAIN-SUFFIX,googlecompare.co.uk,🌐 Google
-  - DOMAIN-SUFFIX,googledanmark.com,🌐 Google
-  - DOMAIN-SUFFIX,googledomains.com,🌐 Google
-  - DOMAIN-SUFFIX,googlee.com,🌐 Google
-  - DOMAIN-SUFFIX,googleearth.com,🌐 Google
-  - DOMAIN-SUFFIX,googlefiber.com,🌐 Google
-  - DOMAIN-SUFFIX,googlefiber.net,🌐 Google
-  - DOMAIN-SUFFIX,googlefinland.com,🌐 Google
-  - DOMAIN-SUFFIX,googleflights-cn.net,🌐 Google
-  - DOMAIN-SUFFIX,googlemail.com,🌐 Google
-  - DOMAIN-SUFFIX,googlemaps.com,🌐 Google
-  - DOMAIN-SUFFIX,googlemashups.com,🌐 Google
-  - DOMAIN-SUFFIX,googleoptimize-cn.com,🌐 Google
-  - DOMAIN-SUFFIX,googleoptimize.com,🌐 Google
-  - DOMAIN-SUFFIX,googlepagecreator.com,🌐 Google
-  - DOMAIN-SUFFIX,googlephotos.com,🌐 Google
-  - DOMAIN-SUFFIX,googleplay.com,🌐 Google
-  - DOMAIN-SUFFIX,googleplus.com,🌐 Google
-  - DOMAIN-SUFFIX,googlescholar.com,🌐 Google
-  - DOMAIN-SUFFIX,googlesource.com,🌐 Google
-  - DOMAIN-SUFFIX,googlestore.com,🌐 Google
-  - DOMAIN-SUFFIX,googlesverige.com,🌐 Google
-  - DOMAIN-SUFFIX,googlesyndication-cn.com,🌐 Google
-  - DOMAIN-SUFFIX,googlesyndication.com,🌐 Google
-  - DOMAIN-SUFFIX,googletagmanager-cn.com,🌐 Google
-  - DOMAIN-SUFFIX,googletagmanager.com,🌐 Google
-  - DOMAIN-SUFFIX,googletagservices-cn.com,🌐 Google
-  - DOMAIN-SUFFIX,googletagservices.com,🌐 Google
-  - DOMAIN-SUFFIX,googletraveladservices-cn.com,🌐 Google
-  - DOMAIN-SUFFIX,googletraveladservices.com,🌐 Google
-  - DOMAIN-SUFFIX,googlevads-cn.com,🌐 Google
-  - DOMAIN-SUFFIX,googleventures.com,🌐 Google
-  - DOMAIN-SUFFIX,googlr.com,🌐 Google
-  - DOMAIN-SUFFIX,goolge.com,🌐 Google
-  - DOMAIN-SUFFIX,gooogle.com,🌐 Google
-  - DOMAIN-SUFFIX,gridaware.app,🌐 Google
-  - DOMAIN-SUFFIX,gsrc.io,🌐 Google
-  - DOMAIN-SUFFIX,gstatic-cn.com,🌐 Google
-  - DOMAIN-SUFFIX,gstatic.cn,🌐 Google
-  - DOMAIN-SUFFIX,gstatic.com,🌐 Google
-  - DOMAIN-SUFFIX,gstaticcnapps.cn,🌐 Google
-  - DOMAIN-SUFFIX,gsuite.com,🌐 Google
-  - DOMAIN-SUFFIX,gv.com,🌐 Google
-  - DOMAIN-SUFFIX,gvt0.com,🌐 Google
-  - DOMAIN-SUFFIX,gvt1-cn.com,🌐 Google
-  - DOMAIN-SUFFIX,gvt2-cn.com,🌐 Google
-  - DOMAIN-SUFFIX,gvt3.com,🌐 Google
-  - DOMAIN-SUFFIX,gvt5.com,🌐 Google
-  - DOMAIN-SUFFIX,gvt6.com,🌐 Google
-  - DOMAIN-SUFFIX,gvt7.com,🌐 Google
-  - DOMAIN-SUFFIX,gvt9.com,🌐 Google
-  - DOMAIN-SUFFIX,gwtproject.org,🌐 Google
-  - DOMAIN-SUFFIX,hdrplusdata.org,🌐 Google
-  - DOMAIN-SUFFIX,hey.gle,🌐 Google
-  - DOMAIN-SUFFIX,hindiweb.com,🌐 Google
-  - DOMAIN-SUFFIX,howtogetmo.co.uk,🌐 Google
-  - DOMAIN-SUFFIX,html5rocks.com,🌐 Google
-  - DOMAIN-SUFFIX,hwgo.com,🌐 Google
-  - DOMAIN-SUFFIX,iam.soy,🌐 Google
-  - DOMAIN-SUFFIX,iamremarkable.org,🌐 Google
-  - DOMAIN-SUFFIX,igoogle.com,🌐 Google
-  - DOMAIN-SUFFIX,impermium.com,🌐 Google
-  - DOMAIN-SUFFIX,itasoftware.com,🌐 Google
-  - DOMAIN-SUFFIX,j2objc.org,🌐 Google
-  - DOMAIN-SUFFIX,jibemobile.com,🌐 Google
-  - DOMAIN-SUFFIX,kaggle.com,🌐 Google
-  - DOMAIN-SUFFIX,kaggle.io,🌐 Google
-  - DOMAIN-SUFFIX,keyhole.com,🌐 Google
-  - DOMAIN-SUFFIX,keytransparency.com,🌐 Google
-  - DOMAIN-SUFFIX,keytransparency.foo,🌐 Google
-  - DOMAIN-SUFFIX,keytransparency.org,🌐 Google
-  - DOMAIN-SUFFIX,lanternal.com,🌐 Google
-  - DOMAIN-SUFFIX,like.com,🌐 Google
-  - DOMAIN-SUFFIX,madewithcode.com,🌐 Google
-  - DOMAIN-SUFFIX,material.io,🌐 Google
-  - DOMAIN-SUFFIX,mdialog.com,🌐 Google
-  - DOMAIN-SUFFIX,meet.new,🌐 Google
-  - DOMAIN-SUFFIX,mfg-inspector.com,🌐 Google
-  - DOMAIN-SUFFIX,mobileview.page,🌐 Google
-  - DOMAIN-SUFFIX,moodstocks.com,🌐 Google
-  - DOMAIN-SUFFIX,near.by,🌐 Google
-  - DOMAIN-SUFFIX,nest.com,🌐 Google
-  - DOMAIN-SUFFIX,neverware.com,🌐 Google
-  - DOMAIN-SUFFIX,nomulus.foo,🌐 Google
-  - DOMAIN-SUFFIX,oasisfeng.com,🌐 Google
-  - DOMAIN-SUFFIX,oauthz.com,🌐 Google
-  - DOMAIN-SUFFIX,ok.gle,🌐 Google
-  - DOMAIN-SUFFIX,on.here,🌐 Google
-  - DOMAIN-SUFFIX,on2.com,🌐 Google
-  - DOMAIN-SUFFIX,onefifteen.net,🌐 Google
-  - DOMAIN-SUFFIX,onefifteen.org,🌐 Google
-  - DOMAIN-SUFFIX,oneworldmanystories.com,🌐 Google
-  - DOMAIN-SUFFIX,opensourceinsight.dev,🌐 Google
-  - DOMAIN-SUFFIX,opensourceinsights.dev,🌐 Google
-  - DOMAIN-SUFFIX,openthread.io,🌐 Google
-  - DOMAIN-SUFFIX,openweave.io,🌐 Google
-  - DOMAIN-SUFFIX,orbitera.com,🌐 Google
-  - DOMAIN-SUFFIX,page.link,🌐 Google
-  - DOMAIN-SUFFIX,pagespeedmobilizer.com,🌐 Google
-  - DOMAIN-SUFFIX,pageview.mobi,🌐 Google
-  - DOMAIN-SUFFIX,panoramio.com,🌐 Google
-  - DOMAIN-SUFFIX,partylikeits1986.org,🌐 Google
-  - DOMAIN-SUFFIX,paxlicense.org,🌐 Google
-  - DOMAIN-SUFFIX,picasa.com,🌐 Google
-  - DOMAIN-SUFFIX,picasaweb.com,🌐 Google
-  - DOMAIN-SUFFIX,picasaweb.net,🌐 Google
-  - DOMAIN-SUFFIX,picasaweb.org,🌐 Google
-  - DOMAIN-SUFFIX,picnik.com,🌐 Google
-  - DOMAIN-SUFFIX,pittpatt.com,🌐 Google
-  - DOMAIN-SUFFIX,pixate.com,🌐 Google
-  - DOMAIN-SUFFIX,pki.goog,🌐 Google
-  - DOMAIN-SUFFIX,plus.codes,🌐 Google
-  - DOMAIN-SUFFIX,polymer-project.org,🌐 Google
-  - DOMAIN-SUFFIX,polymerproject.org,🌐 Google
-  - DOMAIN-SUFFIX,postini.com,🌐 Google
-  - DOMAIN-SUFFIX,privacysandbox.com,🌐 Google
-  - DOMAIN-SUFFIX,prod-controlbe.floonet.goog,🌐 Google
-  - DOMAIN-SUFFIX,prod-databe.floonet.goog,🌐 Google
-  - DOMAIN-SUFFIX,prod.databe.floonet.goog,🌐 Google
-  - DOMAIN-SUFFIX,projectara.com,🌐 Google
-  - DOMAIN-SUFFIX,projectbaseline.com,🌐 Google
-  - DOMAIN-SUFFIX,publishproxy.com,🌐 Google
-  - DOMAIN-SUFFIX,qiao-cn.com,🌐 Google
-  - DOMAIN-SUFFIX,qpx.googleflights.net,🌐 Google
-  - DOMAIN-SUFFIX,questvisual.com,🌐 Google
-  - DOMAIN-SUFFIX,quickoffice.com,🌐 Google
-  - DOMAIN-SUFFIX,quiksee.com,🌐 Google
-  - DOMAIN-SUFFIX,recaptcha-cn.net,🌐 Google
-  - DOMAIN-SUFFIX,recaptcha.net,🌐 Google
-  - DOMAIN-SUFFIX,redhotlabs.com,🌐 Google
-  - DOMAIN-SUFFIX,redirector.gcpcdn.gvt1.com,🌐 Google
-  - DOMAIN-SUFFIX,redirector.gvt1.com,🌐 Google
-  - DOMAIN-SUFFIX,redirector.offline-maps.gvt1.com,🌐 Google
-  - DOMAIN-SUFFIX,redirector.snap.gvt1.com,🌐 Google
-  - DOMAIN-SUFFIX,registry.google,🌐 Google
-  - DOMAIN-SUFFIX,revolv.com,🌐 Google
-  - DOMAIN-SUFFIX,ridepenguin.com,🌐 Google
-  - DOMAIN-SUFFIX,run.app,🌐 Google
-  - DOMAIN-SUFFIX,savethedate.foo,🌐 Google
-  - DOMAIN-SUFFIX,saynow.com,🌐 Google
-  - DOMAIN-SUFFIX,schema.org,🌐 Google
-  - DOMAIN-SUFFIX,schemer.com,🌐 Google
-  - DOMAIN-SUFFIX,screenwisetrends.com,🌐 Google
-  - DOMAIN-SUFFIX,screenwisetrendspanel.com,🌐 Google
-  - DOMAIN-SUFFIX,shattered.io,🌐 Google
-  - DOMAIN-SUFFIX,snapseed.com,🌐 Google
-  - DOMAIN-SUFFIX,solveforx.com,🌐 Google
-  - DOMAIN-SUFFIX,stadia.dev,🌐 Google
-  - DOMAIN-SUFFIX,staging-controlbe.floonet.goog,🌐 Google
-  - DOMAIN-SUFFIX,staging-databe.floonet.goog,🌐 Google
-  - DOMAIN-SUFFIX,staging.databe.floonet.goog,🌐 Google
-  - DOMAIN-SUFFIX,stcroixmosquito.com,🌐 Google
-  - DOMAIN-SUFFIX,stcroixmosquitoproject.com,🌐 Google
-  - DOMAIN-SUFFIX,studywatchbyverily.com,🌐 Google
-  - DOMAIN-SUFFIX,studywatchbyverily.org,🌐 Google
-  - DOMAIN-SUFFIX,stxmosquito.com,🌐 Google
-  - DOMAIN-SUFFIX,stxmosquitoproject.com,🌐 Google
-  - DOMAIN-SUFFIX,stxmosquitoproject.net,🌐 Google
-  - DOMAIN-SUFFIX,stxmosquitoproject.org,🌐 Google
-  - DOMAIN-SUFFIX,synergyse.com,🌐 Google
-  - DOMAIN-SUFFIX,teachparentstech.org,🌐 Google
-  - DOMAIN-SUFFIX,tensorflow.org,🌐 Google
-  - DOMAIN-SUFFIX,tfhub.dev,🌐 Google
-  - DOMAIN-SUFFIX,thecleversense.com,🌐 Google
-  - DOMAIN-SUFFIX,thegooglestore.com,🌐 Google
-  - DOMAIN-SUFFIX,thinkquarterly.co.uk,🌐 Google
-  - DOMAIN-SUFFIX,thinkquarterly.com,🌐 Google
-  - DOMAIN-SUFFIX,thinkwithgoogle.com,🌐 Google
-  - DOMAIN-SUFFIX,tiltbrush.com,🌐 Google
-  - DOMAIN-SUFFIX,txcloud.net,🌐 Google
-  - DOMAIN-SUFFIX,txvia.com,🌐 Google
-  - DOMAIN-SUFFIX,unfiltered.news,🌐 Google
-  - DOMAIN-SUFFIX,urchin.com,🌐 Google
-  - DOMAIN-SUFFIX,useplannr.com,🌐 Google
-  - DOMAIN-SUFFIX,usvimosquito.com,🌐 Google
-  - DOMAIN-SUFFIX,usvimosquitoproject.com,🌐 Google
-  - DOMAIN-SUFFIX,v8.dev,🌐 Google
-  - DOMAIN-SUFFIX,v8project.org,🌐 Google
-  - DOMAIN-SUFFIX,velostrata.com,🌐 Google
-  - DOMAIN-SUFFIX,verily.com,🌐 Google
-  - DOMAIN-SUFFIX,verilylifesciences.com,🌐 Google
-  - DOMAIN-SUFFIX,verilystudyhub.com,🌐 Google
-  - DOMAIN-SUFFIX,verilystudywatch.com,🌐 Google
-  - DOMAIN-SUFFIX,verilystudywatch.org,🌐 Google
-  - DOMAIN-SUFFIX,wallet.com,🌐 Google
-  - DOMAIN-SUFFIX,waveprotocol.org,🌐 Google
-  - DOMAIN-SUFFIX,waymo.com,🌐 Google
-  - DOMAIN-SUFFIX,waze.com,🌐 Google
-  - DOMAIN-SUFFIX,web.app,🌐 Google
-  - DOMAIN-SUFFIX,web.dev,🌐 Google
-  - DOMAIN-SUFFIX,webappfieldguide.com,🌐 Google
-  - DOMAIN-SUFFIX,webmproject.org,🌐 Google
-  - DOMAIN-SUFFIX,webpkgcache.com,🌐 Google
-  - DOMAIN-SUFFIX,webrtc.org,🌐 Google
-  - DOMAIN-SUFFIX,weltweitwachsen.de,🌐 Google
-  - DOMAIN-SUFFIX,whatbrowser.org,🌐 Google
-  - DOMAIN-SUFFIX,widevine.com,🌐 Google
-  - DOMAIN-SUFFIX,withgoogle.com,🌐 Google
-  - DOMAIN-SUFFIX,womenwill.com,🌐 Google
-  - DOMAIN-SUFFIX,womenwill.com.br,🌐 Google
-  - DOMAIN-SUFFIX,womenwill.id,🌐 Google
-  - DOMAIN-SUFFIX,womenwill.in,🌐 Google
-  - DOMAIN-SUFFIX,womenwill.mx,🌐 Google
-  - DOMAIN-SUFFIX,www.destinationurl.com,🌐 Google
-  - DOMAIN-SUFFIX,www.pxcc.com,🌐 Google
-  - DOMAIN-SUFFIX,x.company,🌐 Google
-  - DOMAIN-SUFFIX,x.team,🌐 Google
-  - DOMAIN-SUFFIX,xn--9kr7l.com,🌐 Google
-  - DOMAIN-SUFFIX,xn--9trs65b.com,🌐 Google
-  - DOMAIN-SUFFIX,xn--flw351e.com,🌐 Google
-  - DOMAIN-SUFFIX,xn--ggle-55da.com,🌐 Google
-  - DOMAIN-SUFFIX,xn--gogl-0nd52e.com,🌐 Google
-  - DOMAIN-SUFFIX,xn--gogl-1nd42e.com,🌐 Google
-  - DOMAIN-SUFFIX,xn--ngstr-lra8j.com,🌐 Google
-  - DOMAIN-SUFFIX,xn--p8j9a0d9c9a.xn--q9jyb4c,🌐 Google
-  - DOMAIN-SUFFIX,xplr.co,🌐 Google
-  - DOMAIN-SUFFIX,zukunftswerkstatt.de,🌐 Google
-  - DOMAIN-SUFFIX,zynamics.com,🌐 Google
-  - DOMAIN-SUFFIX,googledrive.com,🌐 Google
-  - DOMAIN-SUFFIX,googleusercontent.com,🌐 Google
-  - DOMAIN-KEYWORD,appspot,🌐 Google
-  - DOMAIN-KEYWORD,blogspot,🌐 Google
-  - DOMAIN-KEYWORD,gmail,🌐 Google
-  - DOMAIN-KEYWORD,google,🌐 Google
-  - DOMAIN-KEYWORD,recaptcha,🌐 Google
-  - IP-CIDR,172.110.32.0/21,🌐 Google,no-resolve
-  - IP-CIDR,173.194.0.0/16,🌐 Google,no-resolve
-  - IP-CIDR,216.73.80.0/20,🌐 Google,no-resolve
-  - IP-CIDR,74.125.0.0/16,🌐 Google,no-resolve
-  - IP-CIDR6,2620:120:e000::/40,🌐 Google,no-resolve
-  - PROCESS-NAME,GoogleDriveFS.exe,🌐 Google
-  - PROCESS-NAME,com.android.vending,🌐 Google
-  - PROCESS-NAME,com.google.android.gms,🌐 Google
-  - PROCESS-NAME,com.google.android.gsf,🌐 Google
-  - PROCESS-NAME,com.google.android.play.games,🌐 Google
-  - PROCESS-NAME,BackupandSync,🌐 Google
-  - DOMAIN,browser-intake-datadoghq.com,🤖 ChatGPT
-  - DOMAIN,chat.openai.com.cdn.cloudflare.net,🤖 ChatGPT
-  - DOMAIN,openai-api.arkoselabs.com,🤖 ChatGPT
-  - DOMAIN,openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net,🤖 ChatGPT
-  - DOMAIN,openaicomproductionae4b.blob.core.windows.net,🤖 ChatGPT
-  - DOMAIN,production-openaicom-storage.azureedge.net,🤖 ChatGPT
-  - DOMAIN,static.cloudflareinsights.com,🤖 ChatGPT
-  - DOMAIN-SUFFIX,ai.com,🤖 ChatGPT
-  - DOMAIN-SUFFIX,algolia.net,🤖 ChatGPT
-  - DOMAIN-SUFFIX,api.statsig.com,🤖 ChatGPT
-  - DOMAIN-SUFFIX,auth0.com,🤖 ChatGPT
-  - DOMAIN-SUFFIX,chatgpt.com,🤖 ChatGPT
-  - DOMAIN-SUFFIX,chatgpt.livekit.cloud,🤖 ChatGPT
-  - DOMAIN-SUFFIX,client-api.arkoselabs.com,🤖 ChatGPT
-  - DOMAIN-SUFFIX,events.statsigapi.net,🤖 ChatGPT
-  - DOMAIN-SUFFIX,featuregates.org,🤖 ChatGPT
-  - DOMAIN-SUFFIX,host.livekit.cloud,🤖 ChatGPT
-  - DOMAIN-SUFFIX,identrust.com,🤖 ChatGPT
-  - DOMAIN-SUFFIX,intercom.io,🤖 ChatGPT
-  - DOMAIN-SUFFIX,intercomcdn.com,🤖 ChatGPT
-  - DOMAIN-SUFFIX,launchdarkly.com,🤖 ChatGPT
-  - DOMAIN-SUFFIX,oaistatic.com,🤖 ChatGPT
-  - DOMAIN-SUFFIX,oaiusercontent.com,🤖 ChatGPT
-  - DOMAIN-SUFFIX,observeit.net,🤖 ChatGPT
-  - DOMAIN-SUFFIX,openai.com,🤖 ChatGPT
-  - DOMAIN-SUFFIX,openaiapi-site.azureedge.net,🤖 ChatGPT
-  - DOMAIN-SUFFIX,openaicom.imgix.net,🤖 ChatGPT
-  - DOMAIN-SUFFIX,segment.io,🤖 ChatGPT
-  - DOMAIN-SUFFIX,sentry.io,🤖 ChatGPT
-  - DOMAIN-SUFFIX,stripe.com,🤖 ChatGPT
-  - DOMAIN-SUFFIX,turn.livekit.cloud,🤖 ChatGPT
-  - DOMAIN-KEYWORD,openai,🤖 ChatGPT
-  - IP-CIDR,24.199.123.28/32,🤖 ChatGPT,no-resolve
-  - IP-CIDR,64.23.132.171/32,🤖 ChatGPT,no-resolve
-  - IP-ASN,20473,🤖 ChatGPT,no-resolve
-  - DOMAIN,api.imem.app,📨 Telegram
-  - DOMAIN,api.swiftgram.app,📨 Telegram
-  - DOMAIN-SUFFIX,cdn-telegram.org,📨 Telegram
-  - DOMAIN-SUFFIX,comments.app,📨 Telegram
-  - DOMAIN-SUFFIX,contest.com,📨 Telegram
-  - DOMAIN-SUFFIX,graph.org,📨 Telegram
-  - DOMAIN-SUFFIX,legra.ph,📨 Telegram
-  - DOMAIN-SUFFIX,mbrx.app,📨 Telegram
-  - DOMAIN-SUFFIX,quiz.directory,📨 Telegram
-  - DOMAIN-SUFFIX,stel.com,📨 Telegram
-  - DOMAIN-SUFFIX,t.me,📨 Telegram
-  - DOMAIN-SUFFIX,tdesktop.com,📨 Telegram
-  - DOMAIN-SUFFIX,telega.one,📨 Telegram
-  - DOMAIN-SUFFIX,telegra.ph,📨 Telegram
-  - DOMAIN-SUFFIX,telegram-cdn.org,📨 Telegram
-  - DOMAIN-SUFFIX,telegram.dog,📨 Telegram
-  - DOMAIN-SUFFIX,telegram.me,📨 Telegram
-  - DOMAIN-SUFFIX,telegram.org,📨 Telegram
-  - DOMAIN-SUFFIX,telegram.space,📨 Telegram
-  - DOMAIN-SUFFIX,telegramdownload.com,📨 Telegram
-  - DOMAIN-SUFFIX,telesco.pe,📨 Telegram
-  - DOMAIN-SUFFIX,tg.dev,📨 Telegram
-  - DOMAIN-SUFFIX,tx.me,📨 Telegram
-  - DOMAIN-SUFFIX,usercontent.dev,📨 Telegram
-  - DOMAIN-KEYWORD,nicegram,📨 Telegram
-  - IP-CIDR,109.239.140.0/24,📨 Telegram,no-resolve
-  - IP-CIDR,139.59.210.98/32,📨 Telegram,no-resolve
-  - IP-CIDR,149.154.160.0/20,📨 Telegram,no-resolve
-  - IP-CIDR,196.55.216.167/32,📨 Telegram,no-resolve
-  - IP-CIDR,5.28.192.0/18,📨 Telegram,no-resolve
-  - IP-CIDR,91.108.0.0/16,📨 Telegram,no-resolve
-  - IP-CIDR6,2001:67c:4e8::/48,📨 Telegram,no-resolve
-  - IP-CIDR6,2001:b28:f23c::/47,📨 Telegram,no-resolve
-  - IP-CIDR6,2001:b28:f23f::/48,📨 Telegram,no-resolve
-  - IP-CIDR6,2a0a:f280::/29,📨 Telegram,no-resolve
-  - PROCESS-NAME,Telegram.exe,📨 Telegram
-  - PROCESS-NAME,nekox.messenger,📨 Telegram
-  - PROCESS-NAME,org.telegram.messenger,📨 Telegram
-  - PROCESS-NAME,telegram-desktop,📨 Telegram
-  - PROCESS-NAME,tw.nekomimi.nekogram,📨 Telegram
-  - PROCESS-NAME,xyz.nextalone.nagram,📨 Telegram
-  - IP-ASN,211157,📨 Telegram,no-resolve
-  - IP-ASN,44907,📨 Telegram,no-resolve
-  - IP-ASN,59930,📨 Telegram,no-resolve
-  - IP-ASN,62014,📨 Telegram,no-resolve
-  - IP-ASN,62041,📨 Telegram,no-resolve
-  - DOMAIN-SUFFIX,ggpht.cn,📺 YouTube
-  - DOMAIN-SUFFIX,ggpht.com,📺 YouTube
-  - DOMAIN-SUFFIX,googlevideo.com,📺 YouTube
-  - DOMAIN-SUFFIX,gvt1.com,📺 YouTube
-  - DOMAIN-SUFFIX,gvt2.com,📺 YouTube
-  - DOMAIN-SUFFIX,video.google.com,📺 YouTube
-  - DOMAIN-SUFFIX,wide-youtube.l.google.com,📺 YouTube
-  - DOMAIN-SUFFIX,withyoutube.com,📺 YouTube
-  - DOMAIN-SUFFIX,youtu.be,📺 YouTube
-  - DOMAIN-SUFFIX,youtube,📺 YouTube
-  - DOMAIN-SUFFIX,youtube-nocookie.com,📺 YouTube
-  - DOMAIN-SUFFIX,youtube-ui.l.google.com,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.ae,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.al,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.am,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.at,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.az,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.ba,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.be,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.bg,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.bh,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.bo,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.by,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.ca,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.cat,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.ch,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.cl,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.co,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.co.ae,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.co.at,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.co.cr,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.co.hu,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.co.id,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.co.il,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.co.in,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.co.jp,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.co.ke,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.co.kr,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.co.ma,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.co.nz,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.co.th,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.co.tz,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.co.ug,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.co.uk,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.co.ve,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.co.za,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.co.zw,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.ar,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.au,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.az,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.bd,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.bh,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.bo,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.br,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.by,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.co,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.do,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.ec,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.ee,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.eg,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.es,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.gh,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.gr,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.gt,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.hk,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.hn,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.hr,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.jm,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.jo,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.kw,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.lb,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.lv,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.ly,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.mk,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.mt,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.mx,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.my,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.ng,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.ni,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.om,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.pa,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.pe,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.ph,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.pk,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.pt,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.py,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.qa,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.ro,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.sa,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.sg,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.sv,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.tn,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.tr,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.tw,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.ua,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.uy,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.com.ve,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.cr,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.cz,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.de,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.dk,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.ee,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.es,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.fi,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.fr,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.ge,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.googleapis.com,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.gr,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.gt,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.hk,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.hr,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.hu,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.ie,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.in,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.iq,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.is,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.it,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.jo,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.jp,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.kr,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.kz,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.la,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.lk,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.lt,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.lu,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.lv,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.ly,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.ma,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.md,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.me,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.mk,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.mn,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.mx,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.my,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.ng,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.ni,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.nl,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.no,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.pa,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.pe,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.ph,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.pk,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.pl,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.pr,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.pt,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.qa,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.ro,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.rs,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.ru,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.sa,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.se,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.sg,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.si,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.sk,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.sn,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.soy,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.sv,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.tn,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.tv,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.ua,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.ug,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.uy,📺 YouTube
-  - DOMAIN-SUFFIX,youtube.vn,📺 YouTube
-  - DOMAIN-SUFFIX,youtubeeducation.com,📺 YouTube
-  - DOMAIN-SUFFIX,youtubeembeddedplayer.googleapis.com,📺 YouTube
-  - DOMAIN-SUFFIX,youtubefanfest.com,📺 YouTube
-  - DOMAIN-SUFFIX,youtubegaming.com,📺 YouTube
-  - DOMAIN-SUFFIX,youtubego.co.id,📺 YouTube
-  - DOMAIN-SUFFIX,youtubego.co.in,📺 YouTube
-  - DOMAIN-SUFFIX,youtubego.com,📺 YouTube
-  - DOMAIN-SUFFIX,youtubego.com.br,📺 YouTube
-  - DOMAIN-SUFFIX,youtubego.id,📺 YouTube
-  - DOMAIN-SUFFIX,youtubego.in,📺 YouTube
-  - DOMAIN-SUFFIX,youtubei.googleapis.com,📺 YouTube
-  - DOMAIN-SUFFIX,youtubekids.com,📺 YouTube
-  - DOMAIN-SUFFIX,youtubemobilesupport.com,📺 YouTube
-  - DOMAIN-SUFFIX,yt.be,📺 YouTube
-  - DOMAIN-SUFFIX,ytimg.com,📺 YouTube
-  - DOMAIN-KEYWORD,youtube,📺 YouTube
-  - IP-CIDR,172.110.32.0/21,📺 YouTube,no-resolve
-  - IP-CIDR,216.73.80.0/20,📺 YouTube,no-resolve
-  - IP-CIDR6,2620:120:e000::/40,📺 YouTube,no-resolve
+
+
+  # ----------------------------------------------------------
+  # 🟢 其他直连
+  # ----------------------------------------------------------
+
+  - RULE-SET,Direct,🟢 直连
+  - RULE-SET,Direct-CNCIDR,🟢 直连
+  - RULE-SET,Direct-Private,🟢 直连
+
+
+  # ----------------------------------------------------------
+  # 🎮 下载 / 游戏 / Steam
+  # ----------------------------------------------------------
+
+  - RULE-SET,Direct-Download,🟢 直连
+  - RULE-SET,Direct-GameDownload,🟢 直连
+  - RULE-SET,Direct-SteamCN,🟢 直连
+
+
+  # ----------------------------------------------------------
+  # 💰 加密货币
+  # ----------------------------------------------------------
+
+  - RULE-SET,Direct-Binance,🟢 直连
+  - RULE-SET,Direct-OKX,🟢 直连
+
+
+  # ----------------------------------------------------------
+  # 🌐 Google
+  # ----------------------------------------------------------
+
+  - RULE-SET,Google,🌐 Google
+
+
+  # ----------------------------------------------------------
+  # 🤖 ChatGPT / OpenAI
+  # ----------------------------------------------------------
+
+  - RULE-SET,ChatGPT,🤖 ChatGPT
+
+
+  # ----------------------------------------------------------
+  # 📨 Telegram
+  # ----------------------------------------------------------
+
+  - RULE-SET,Telegram,📨 Telegram
+
+
+  # ----------------------------------------------------------
+  # 📺 YouTube
+  # ----------------------------------------------------------
+
+  - RULE-SET,YouTube,📺 YouTube
+
+
+  # ----------------------------------------------------------
+  # 🎯 FINAL
+  # ----------------------------------------------------------
+
   - MATCH,🧭 节点选择
