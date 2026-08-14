@@ -1,44 +1,35 @@
 # ============================================================
-# Mihomo 完整配置
+# Mihomo 配置
 # ============================================================
 
+# 基础设置
 mixed-port: 7890
 socks-port: 7891
-
 allow-lan: true
-
 mode: Rule
-
 log-level: info
-
 external-controller: 127.0.0.1:9090
-
 
 # ============================================================
 # 节点订阅
+# 每 30 分钟更新一次
 # ============================================================
 
 proxy-providers:
-
   节点订阅:
     type: http
     url: "https://www.19981124.xyz/share/sub/sjc?token=sijiache20240305"
     path: ./proxy_providers/sub.yaml
-    interval: 86400
+    interval: 1800
 
+    # 每 5 分钟检查节点状态
     health-check:
       enable: true
       url: https://cp.cloudflare.com/generate_204
       interval: 300
       timeout: 5000
 
-
-# ============================================================
-# 代理节点
-# ============================================================
-
 proxies: []
-
 
 # ============================================================
 # 策略组
@@ -46,530 +37,335 @@ proxies: []
 
 proxy-groups:
 
-  # ==========================================================
-  # 🧭 节点选择
-  # ==========================================================
-
+  # 手动选择节点
   - name: 🧭 节点选择
     type: select
-
     use:
       - 节点订阅
-
     proxies:
       - 🌍 全局自动
 
-
-  # ==========================================================
-  # 🌍 全局自动
-  # ==========================================================
-
+  # 全部节点自动测速
   - name: 🌍 全局自动
     type: url-test
-
     use:
       - 节点订阅
-
     url: https://cp.cloudflare.com/generate_204
-
     interval: 300
-
     tolerance: 100
 
-
   # ==========================================================
-  # 🌐 Google
+  # Google
   # ==========================================================
 
+  # Google 手动选择 / 自动选择
   - name: 🌐 Google
     type: select
-
     proxies:
       - 🌐 Google自动
       - 🧭 节点选择
 
-
+  # Google 自动测速
+  # 仅筛选香港节点
   - name: 🌐 Google自动
     type: url-test
-
     use:
       - 节点订阅
-
-    filter: '(?i).*(新加坡|Singapore|SG|日本|JP|Japan).*'
-
+    filter: '(?i).*(香港|HK|Hong ?Kong).*'
     url: https://cp.cloudflare.com/generate_204
-
     interval: 300
-
     tolerance: 100
 
-
   # ==========================================================
-  # 🤖 ChatGPT / OpenAI
+  # ChatGPT / OpenAI
   # ==========================================================
 
+  # ChatGPT 手动选择 / 自动选择
   - name: 🤖 ChatGPT
     type: select
-
     proxies:
       - 🤖 ChatGPT自动
       - 🧭 节点选择
 
-
+  # ChatGPT 自动测速
+  # 新加坡 / 日本 / 美国节点
   - name: 🤖 ChatGPT自动
     type: url-test
-
     use:
       - 节点订阅
-
     filter: '(?i).*(新加坡|Singapore|SG|日本|JP|Japan|美国|US|USA|United ?States).*'
-
-    url: https://api.openai.com/v1/models
-
+    url: https://cp.cloudflare.com/generate_204
     interval: 300
-
     tolerance: 100
 
-
   # ==========================================================
-  # 📨 Telegram
+  # Telegram
   # ==========================================================
 
+  # Telegram 手动选择 / 自动选择
   - name: 📨 Telegram
     type: select
-
     proxies:
       - 📨 Telegram自动
       - 🧭 节点选择
 
-
+  # Telegram 自动测速
+  # 香港 / 新加坡 / IPLC 节点
   - name: 📨 Telegram自动
     type: url-test
-
     use:
       - 节点订阅
-
     filter: '(?i).*(香港|HK|Hong ?Kong|IPLC|新加坡|Singapore|SG).*'
-
-    url: https://cachefly.cachefly.net/10mb.test
-
+    url: https://cp.cloudflare.com/generate_204
     interval: 300
-
     tolerance: 100
 
-
   # ==========================================================
-  # 📺 YouTube
+  # YouTube
   # ==========================================================
 
+  # YouTube 手动选择 / 自动选择
   - name: 📺 YouTube
     type: select
-
     proxies:
       - 📺 YouTube自动
       - 🧭 节点选择
 
-
+  # YouTube 自动测速
+  # 香港 / 日本 / 新加坡 / IPLC / 流媒体节点
   - name: 📺 YouTube自动
     type: url-test
-
     use:
       - 节点订阅
-
     filter: '(?i).*(新加坡|Singapore|SG|日本|JP|Japan|香港|HK|Hong ?Kong|IPLC|流媒体).*'
-
-    url: https://cachefly.cachefly.net/10mb.test
-
+    url: https://cp.cloudflare.com/generate_204
     interval: 300
-
     tolerance: 100
 
-
   # ==========================================================
-  # 🟢 直连
+  # 直连 / 拦截
   # ==========================================================
 
+  # 强制直连
   - name: 🟢 直连
     type: select
-
     proxies:
       - DIRECT
 
-
-  # ==========================================================
-  # ⛔ 拦截
-  # ==========================================================
-
+  # 强制拦截
   - name: ⛔ 拦截
     type: select
-
     proxies:
       - REJECT
 
-
 # ============================================================
 # Rule Providers
+# 所有远程规则每 30 分钟更新
 # ============================================================
 
 rule-providers:
 
-  # ==========================================================
-  # 🟢 局域网
-  #
-  # ACL4SSR LocalAreaNetwork.list
-  # 属于 classical + text
-  # ==========================================================
+  # ----------------------------------------------------------
+  # 局域网
+  # ACL4SSR / classical + text
+  # ----------------------------------------------------------
 
   Direct-LocalAreaNetwork:
-
     type: http
-
     url: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/LocalAreaNetwork.list"
-
     path: ./rule-providers/Direct-LocalAreaNetwork.list
-
-    interval: 86400
-
+    interval: 1800
     behavior: classical
-
     format: text
 
-
-  # ==========================================================
-  # 🟢 Loyalsoldier Direct
-  #
-  # direct.txt:
-  # domain 类型
-  # YAML 格式
-  # ==========================================================
+  # ----------------------------------------------------------
+  # 国内域名
+  # Loyalsoldier / domain + yaml
+  # ----------------------------------------------------------
 
   Direct:
-
     type: http
-
     url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/direct.txt"
-
     path: ./rule-providers/Direct.yaml
-
-    interval: 86400
-
+    interval: 1800
     behavior: domain
-
     format: yaml
 
-
-  # ==========================================================
-  # 🟢 Loyalsoldier CN CIDR
-  #
-  # cncidr.txt:
-  # IP CIDR 类型
-  # YAML 格式
-  # ==========================================================
+  # ----------------------------------------------------------
+  # 国内 IP
+  # Loyalsoldier / ipcidr + yaml
+  # ----------------------------------------------------------
 
   Direct-CNCIDR:
-
     type: http
-
     url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/cncidr.txt"
-
     path: ./rule-providers/Direct-CNCIDR.yaml
-
-    interval: 86400
-
+    interval: 1800
     behavior: ipcidr
-
     format: yaml
 
-
-  # ==========================================================
-  # 🟢 Loyalsoldier Private
-  #
-  # private.txt:
-  # domain 类型
-  # YAML 格式
-  # ==========================================================
+  # ----------------------------------------------------------
+  # 私有域名
+  # Loyalsoldier / domain + yaml
+  # ----------------------------------------------------------
 
   Direct-Private:
-
     type: http
-
     url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/private.txt"
-
     path: ./rule-providers/Direct-Private.yaml
-
-    interval: 86400
-
+    interval: 1800
     behavior: domain
-
     format: yaml
 
-
-  # ==========================================================
-  # 🎮 下载
-  #
-  # Blackmatrix7 Clash List
-  # classical + text
-  # ==========================================================
+  # ----------------------------------------------------------
+  # 下载
+  # ----------------------------------------------------------
 
   Direct-Download:
-
     type: http
-
     url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Download/Download.list"
-
     path: ./rule-providers/Direct-Download.list
-
-    interval: 86400
-
+    interval: 1800
     behavior: classical
-
     format: text
 
-
-  # ==========================================================
-  # 🎮 游戏下载
-  # ==========================================================
+  # ----------------------------------------------------------
+  # 游戏下载
+  # ----------------------------------------------------------
 
   Direct-GameDownload:
-
     type: http
-
     url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Game/GameDownload/GameDownload.list"
-
     path: ./rule-providers/Direct-GameDownload.list
-
-    interval: 86400
-
+    interval: 1800
     behavior: classical
-
     format: text
 
-
-  # ==========================================================
-  # 🎮 Steam CN
-  # ==========================================================
+  # ----------------------------------------------------------
+  # Steam 中国
+  # ----------------------------------------------------------
 
   Direct-SteamCN:
-
     type: http
-
     url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/SteamCN/SteamCN.list"
-
     path: ./rule-providers/Direct-SteamCN.list
-
-    interval: 86400
-
+    interval: 1800
     behavior: classical
-
     format: text
 
-
-  # ==========================================================
-  # 💰 Binance
-  # ==========================================================
+  # ----------------------------------------------------------
+  # Binance
+  # ----------------------------------------------------------
 
   Direct-Binance:
-
     type: http
-
     url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Binance/Binance.list"
-
     path: ./rule-providers/Direct-Binance.list
-
-    interval: 86400
-
+    interval: 1800
     behavior: classical
-
     format: text
 
-
-  # ==========================================================
-  # 💰 OKX
-  # ==========================================================
+  # ----------------------------------------------------------
+  # OKX
+  # ----------------------------------------------------------
 
   Direct-OKX:
-
     type: http
-
     url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OKX/OKX.list"
-
     path: ./rule-providers/Direct-OKX.list
-
-    interval: 86400
-
+    interval: 1800
     behavior: classical
-
     format: text
 
-
-  # ==========================================================
-  # 🌐 Google
-  # ==========================================================
+  # ----------------------------------------------------------
+  # Google
+  # ----------------------------------------------------------
 
   Google:
-
     type: http
-
     url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.list"
-
     path: ./rule-providers/Google.list
-
-    interval: 86400
-
+    interval: 1800
     behavior: classical
-
     format: text
 
-
-  # ==========================================================
-  # 🤖 ChatGPT / OpenAI
-  # ==========================================================
+  # ----------------------------------------------------------
+  # ChatGPT / OpenAI
+  # ----------------------------------------------------------
 
   ChatGPT:
-
     type: http
-
     url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.list"
-
     path: ./rule-providers/ChatGPT.list
-
-    interval: 86400
-
+    interval: 1800
     behavior: classical
-
     format: text
 
-
-  # ==========================================================
-  # 📨 Telegram
-  # ==========================================================
+  # ----------------------------------------------------------
+  # Telegram
+  # ----------------------------------------------------------
 
   Telegram:
-
     type: http
-
     url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Telegram/Telegram.list"
-
     path: ./rule-providers/Telegram.list
-
-    interval: 86400
-
+    interval: 1800
     behavior: classical
-
     format: text
 
-
-  # ==========================================================
-  # 📺 YouTube
-  # ==========================================================
+  # ----------------------------------------------------------
+  # YouTube
+  # ----------------------------------------------------------
 
   YouTube:
-
     type: http
-
     url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube.list"
-
     path: ./rule-providers/YouTube.list
-
-    interval: 86400
-
+    interval: 1800
     behavior: classical
-
     format: text
-
 
 # ============================================================
 # Rules
+# 按从上到下的顺序匹配
 # ============================================================
 
 rules:
 
-  # ==========================================================
-  # 🟢 Private / LAN
-  # ==========================================================
-
+  # 私有网络 / 局域网
   - GEOSITE,private,🟢 直连
-
   - GEOIP,LAN,🟢 直连,no-resolve
-
-
-  # ==========================================================
-  # 🟢 局域网 Rule Provider
-  # ==========================================================
-
   - RULE-SET,Direct-LocalAreaNetwork,🟢 直连
 
-
-  # ==========================================================
-  # 🇨🇳 中国大陆
-  # ==========================================================
-
+  # 中国大陆
   - GEOSITE,CN,🟢 直连
-
   - GEOIP,CN,🟢 直连,no-resolve
 
-
-  # ==========================================================
-  # 🟢 Loyalsoldier Direct
-  # ==========================================================
-
+  # 国内直连
   - RULE-SET,Direct,🟢 直连
-
   - RULE-SET,Direct-CNCIDR,🟢 直连,no-resolve
-
   - RULE-SET,Direct-Private,🟢 直连
 
-
-  # ==========================================================
-  # 🎮 下载 / 游戏 / Steam
-  # ==========================================================
-
+  # 下载 / 游戏 / Steam
   - RULE-SET,Direct-Download,🟢 直连
-
   - RULE-SET,Direct-GameDownload,🟢 直连
-
   - RULE-SET,Direct-SteamCN,🟢 直连
 
-
-  # ==========================================================
-  # 💰 加密货币
-  # ==========================================================
-
+  # 加密货币
   - RULE-SET,Direct-Binance,🟢 直连
-
   - RULE-SET,Direct-OKX,🟢 直连
 
-
-  # ==========================================================
-  # 🌐 Google
-  # ==========================================================
-
+  # Google
   - RULE-SET,Google,🌐 Google
 
-
-  # ==========================================================
-  # 🤖 ChatGPT / OpenAI
-  # ==========================================================
-
+  # ChatGPT / OpenAI
   - RULE-SET,ChatGPT,🤖 ChatGPT
 
-
-  # ==========================================================
-  # 📨 Telegram
-  # ==========================================================
-
+  # Telegram
   - RULE-SET,Telegram,📨 Telegram
 
-
-  # ==========================================================
-  # 📺 YouTube
-  # ==========================================================
-
+  # YouTube
   - RULE-SET,YouTube,📺 YouTube
 
-
-  # ==========================================================
-  # 🎯 FINAL
-  # ==========================================================
-
+  # 最终兜底
   - MATCH,🧭 节点选择
