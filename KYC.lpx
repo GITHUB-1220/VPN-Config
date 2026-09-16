@@ -1,12 +1,16 @@
 #!name = Tuyo KYC
-#!desc = 获取 Tuyo Persona KYC 验证链接
+#!desc = Tuyo KYC 请求监测
 #!author = GITHUB-1220
-#!loon_version = 3.5.0(750)
+#!loon_version = 3.5.1(983)
 
 [Script]
 
-http-response ^https:\/\/withpersona\.com\/api\/internal\/verify\/v1\/inquiries\/inq_[A-Za-z0-9]+(?:\?.*)?$ script-path=https://raw.githubusercontent.com/GITHUB-1220/VPN-Config/refs/heads/main/KYC.JS,requires-body=true,timeout=20,tag=Tuyo Persona Inquiry,enable=true
+# 旧版 Tuyo KYC
+http-response ^https:\/\/api\.tuyo\.com\/account\/verification(?:\?.*)?$ script-path=https://raw.githubusercontent.com/GITHUB-1220/VPN-Config/refs/heads/main/KYC.JS,requires-body=true,timeout=20,tag=Tuyo KYC,enable=true
+
+# 新版 Persona Inquiry：仅检测，不提取会话 URL
+http-response ^https:\/\/withpersona\.com\/api\/internal\/verify\/v1\/inquiries\/inq_[A-Za-z0-9]+(?:\?.*)?$ script-path=https://raw.githubusercontent.com/GITHUB-1220/VPN-Config/refs/heads/main/KYC-Debug.JS,requires-body=true,timeout=20,tag=Persona Inquiry,enable=true
 
 [Mitm]
 
-hostname = withpersona.com
+hostname = api.tuyo.com, withpersona.com
