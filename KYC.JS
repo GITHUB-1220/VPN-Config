@@ -1,35 +1,21 @@
-// Tuyo KYC - Persona API
-const body = $response && $response.body;
+// KYC-Debug.JS
+// 仅检测请求是否命中，不提取或输出 KYC 会话链接
 
 try {
-    if (body) {
-        const text = String(body);
+    const url = ($request && $request.url) || "";
 
-        // 提取完整 Persona Inquiry API 地址
-        const match = text.match(
-            /https:\/\/withpersona\.com\/api\/internal\/verify\/v1\/inquiries\/inq_[A-Za-z0-9]+/
+    if (
+        /^https:\/\/withpersona\.com\/api\/internal\/verify\/v1\/inquiries\/inq_[A-Za-z0-9]+(?:\?.*)?$/
+            .test(url)
+    ) {
+        $notification.post(
+            "Tuyo KYC",
+            "Persona Inquiry 已捕获",
+            "请求匹配成功"
         );
-
-        if (match) {
-            const url = match[0];
-
-            const key = "TuyoKYC_LastPersonaAPI";
-            const oldUrl = $persistentStore.read(key);
-
-            // 新链接才通知，重复的不通知
-            if (oldUrl !== url) {
-                $persistentStore.write(url, key);
-
-                $notification.post(
-                    "Tuyo KYC",
-                    "发现新的 Persona KYC",
-                    url
-                );
-            }
-        }
     }
 } catch (e) {
-    // 错误静默，不弹通知
+    // 静默处理
 }
 
 $done({});
