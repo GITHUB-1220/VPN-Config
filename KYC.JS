@@ -1,29 +1,29 @@
-// Tuyo KYC - Persona Inquiry
+// Tuyo KYC - Persona API
 const body = $response && $response.body;
 
 try {
     if (body) {
         const text = String(body);
-        const match = text.match(/inq_[A-Za-z0-9]+/);
+
+        // 提取完整 Persona Inquiry API 地址
+        const match = text.match(
+            /https:\/\/withpersona\.com\/api\/internal\/verify\/v1\/inquiries\/inq_[A-Za-z0-9]+/
+        );
 
         if (match) {
-            const inquiryId = match[0];
+            const url = match[0];
 
-            const kycUrl =
-                "https://tuyo.withpersona.com/inquiry?inquiry-id=" +
-                inquiryId;
-
-            const key = "TuyoKYC_InquiryURL_Last";
+            const key = "TuyoKYC_LastPersonaAPI";
             const oldUrl = $persistentStore.read(key);
 
-            // 只通知新的 KYC 链接，避免重复通知
-            if (oldUrl !== kycUrl) {
-                $persistentStore.write(kycUrl, key);
+            // 新链接才通知，重复的不通知
+            if (oldUrl !== url) {
+                $persistentStore.write(url, key);
 
                 $notification.post(
                     "Tuyo KYC",
-                    "发现新的 KYC 链接",
-                    kycUrl
+                    "发现新的 Persona KYC",
+                    url
                 );
             }
         }
