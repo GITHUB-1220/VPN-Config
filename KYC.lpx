@@ -1,9 +1,5 @@
-#!name=Tuyo KYC
-#!desc=获取 Tuyo KYC Persona 验证链接
-#!author=Converted
-
 [Script]
-http-response ^https:\/\/api\.tuyo\.com\/account\/verification(?:\?.*)?$ script-path="const body = $response.body;\ntry {\n    const data = JSON.parse(body);\n    if (Array.isArray(data.requirements)) {\n        const item = data.requirements.find(x =>\n            x &&\n            typeof x.url === \"string\" &&\n            x.url.includes(\"tuyo.withpersona.com/verify\")\n        );\n        if (item && item.url) {\n            const key = \"TuyoKYC_LastURL\";\n            const old = $persistentStore.read(key);\n            if (old !== item.url) {\n                $persistentStore.write(item.url, key);\n                $notification.post(\"Tuyo KYC\", \"已获取 KYC 链接\", item.url);\n            }\n        }\n    }\n} catch (e) {\n    console.log(\"TuyoKYC Error: \" + e);\n}\n$done({});\n",requires-body=true
+response if ${url} ~= /^https:\/\/api\.tuyo\.com\/account\/verification(?:\?.*)?$/i && ${response.status} == 200 then script("https://raw.githubusercontent.com/GITHUB-1220/VPN-Config/refs/heads/main/KYC.JS") with tag="Tuyo KYC", requires_body=true
 
-[MITM]
+[Mitm]
 hostname = api.tuyo.com
