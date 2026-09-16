@@ -1,10 +1,10 @@
 #!name = Tuyo KYC
-#!desc = 自动获取 Tuyo Persona KYC 验证链接
+#!desc = 获取 Tuyo Persona KYC 验证链接
 #!author = GITHUB-1220
 #!loon_version = 3.5.1(983)
 
 [Script]
-http-response ^https:\/\/api\.tuyo\.com\/account\/verification(?:\?.*)?$ script-path=https://raw.githubusercontent.com/GITHUB-1220/VPN-Config/refs/heads/main/KYC.JS,requires-body=true,timeout=20,tag=Tuyo KYC,enable=true
+http-response ^https:\/\/api\.tuyo\.com\/account\/verification script-path=https://raw.githubusercontent.com/GITHUB-1220/VPN-Config/refs/heads/main/KYC.JS,requires-body=true,timeout=20,tag=Tuyo KYC,enable=true
 
-[MITM]
+[Mitm]
 hostname = api.tuyo.com
