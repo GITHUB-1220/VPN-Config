@@ -19,27 +19,19 @@ try {
         }
     }
 
-    // 只有找到 KYC 链接才通知
+    // 只有找到 KYC URL 才通知
     if (kycUrl) {
-        var key = "TuyoKYC_LastURL";
-        var lastUrl = $persistentStore.read(key);
+        $notification.post(
+            "Tuyo KYC",
+            "已获取 KYC 链接",
+            kycUrl
+        );
 
-        // 新链接才通知
-        if (lastUrl !== kycUrl) {
-            $persistentStore.write(kycUrl, key);
-
-            $notification.post(
-                "Tuyo KYC",
-                "已获取 KYC 链接",
-                kycUrl
-            );
-
-            console.log("Tuyo KYC URL: " + kycUrl);
-        }
+        console.log("Tuyo KYC URL: " + kycUrl);
     }
 
 } catch (e) {
-    // 失败不通知，只写日志
+    // 所有错误静默处理
     console.log("TuyoKYC Error: " + e);
 }
 
