@@ -1,48 +1,35 @@
-// Tuyo KYC - Loon
+// Tuyo KYC - Persona Inquiry
 const body = $response && $response.body;
 
 try {
-    if (!body) {
-        $done({});
-        return;
-    }
+    if (body) {
+        const text = String(body);
+        const match = text.match(/inq_[A-Za-z0-9]+/);
 
-    const text = String(body);
+        if (match) {
+            const inquiryId = match[0];
 
-    // 提取 Persona Inquiry ID
-    const match = text.match(/inq_[A-Za-z0-9]+/);
+            const kycUrl =
+                "https://tuyo.withpersona.com/inquiry?inquiry-id=" +
+                inquiryId;
 
-    if (match) {
-        const inquiryId = match[0];
+            const key = "TuyoKYC_InquiryURL_Last";
+            const oldUrl = $persistentStore.read(key);
 
-        // 按确认后的格式生成链接
-        const kycUrl =
-            "https://tuyo.withpersona.com/inquiry?inquiry-id=" +
-            inquiryId;
+            // 只通知新的 KYC 链接，避免重复通知
+            if (oldUrl !== kycUrl) {
+                $persistentStore.write(kycUrl, key);
 
-        const key = "TuyoKYC_InquiryURL_Last";
-        const oldUrl = $persistentStore.read(key);
-
-        // 只通知新的链接
-        if (oldUrl !== kycUrl) {
-            $persistentStore.write(kycUrl, key);
-
-            $notification.post(
-                "Tuyo KYC",
-                "已获取 Persona KYC 链接",
-                kycUrl,
-                {
-                    openUrl: kycUrl,
-                    clipboard: kycUrl
-                }
-            );
-
-            console.log("[Tuyo KYC] " + kycUrl);
+                $notification.post(
+                    "Tuyo KYC",
+                    "发现新的 KYC 链接",
+                    kycUrl
+                );
+            }
         }
     }
 } catch (e) {
-    // 错误静默，不通知
-    console.log("[Tuyo KYC] Error");
+    // 错误静默，不弹通知
 }
 
 $done({});
