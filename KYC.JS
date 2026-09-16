@@ -1,45 +1,44 @@
+// Tuyo KYC - Loon
 const body = $response && $response.body;
 
 try {
+    console.log("[Tuyo KYC] triggered");
+
     if (!body) {
-        console.log("[Tuyo KYC] 没有 response body");
+        console.log("[Tuyo KYC] empty response body");
         $done({});
-        return;
-    }
+    } else {
+        const data = JSON.parse(String(body));
+        let url = "";
 
-    const data = JSON.parse(String(body));
-    let inquiryId = "";
-
-    // 从响应中寻找 Inquiry ID
-    if (data && typeof data.id === "string" && /^inq_[A-Za-z0-9]+$/.test(data.id)) {
-        inquiryId = data.id;
-    }
-
-    if (!inquiryId && data && Array.isArray(data.requirements)) {
-        for (const item of data.requirements) {
-            if (item && typeof item.id === "string" &&
-                /^inq_[A-Za-z0-9]+$/.test(item.id)) {
-                inquiryId = item.id;
-                break;
+        if (Array.isArray(data.requirements)) {
+            for (const item of data.requirements) {
+                if (
+                    item &&
+                    typeof item.url === "string" &&
+                    /tuyo\.withpersona\.com\/verify/i.test(item.url)
+                ) {
+                    url = item.url;
+                    break;
+                }
             }
         }
+
+        if (url) {
+            console.log("[Tuyo KYC] URL: " + url);
+
+            $notification.post(
+                "Tuyo KYC",
+                "已获取 Persona KYC 验证链接",
+                url
+            );
+        } else {
+            console.log("[Tuyo KYC] Persona URL not found");
+        }
+
+        $done({});
     }
-
-    if (inquiryId) {
-        console.log("[Tuyo KYC] Inquiry ID: " + inquiryId);
-
-        // 每次发现都通知，不去重
-        $notification.post(
-            "Tuyo KYC",
-            "发现 Inquiry ID",
-            inquiryId
-        );
-    } else {
-        console.log("[Tuyo KYC] 没有找到 Inquiry ID");
-    }
-
 } catch (e) {
-    console.log("[Tuyo KYC] 解析失败: " + e);
+    console.log("[Tuyo KYC] error: " + e);
+    $done({});
 }
-
-$done({});
