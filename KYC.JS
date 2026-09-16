@@ -2,6 +2,7 @@ const body = $response && $response.body;
 
 try {
     if (!body) {
+        console.log("[Tuyo KYC] 没有 response body");
         $done({});
         return;
     }
@@ -22,16 +23,20 @@ try {
         }
     }
 
-    // 找到链接就通知，不去重
     if (url) {
+        console.log("[Tuyo KYC] 找到链接: " + url);
+
         $notification.post(
             "Tuyo KYC",
             "发现 KYC 验证链接",
             url
         );
+    } else {
+        console.log("[Tuyo KYC] 没有找到 KYC 链接");
     }
+
 } catch (e) {
-    // 错误静默，不通知
+    console.log("[Tuyo KYC] 解析失败: " + e);
 }
 
 $done({});
