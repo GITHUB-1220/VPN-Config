@@ -1,21 +1,43 @@
-// KYC-Debug.JS
-// 仅检测请求是否命中，不提取或输出 KYC 会话链接
+// Tuyo KYC - Loon
+const body = $response && $response.body;
 
 try {
-    const url = ($request && $request.url) || "";
+    if (!body) {
+        $done({});
+    } else {
+        const data = JSON.parse(String(body));
+        let url = "";
 
-    if (
-        /^https:\/\/withpersona\.com\/api\/internal\/verify\/v1\/inquiries\/inq_[A-Za-z0-9]+(?:\?.*)?$/
-            .test(url)
-    ) {
-        $notification.post(
-            "Tuyo KYC",
-            "Persona Inquiry 已捕获",
-            "请求匹配成功"
-        );
+        if (Array.isArray(data.requirements)) {
+            for (const item of data.requirements) {
+                if (
+                    item &&
+                    typeof item.url === "string" &&
+                    /tuyo\.withpersona\.com\/verify/i.test(item.url)
+                ) {
+                    url = item.url;
+                    break;
+                }
+            }
+        }
+
+        if (url) {
+            const old = $persistentStore.read("TuyoKYC_LastURL");
+
+            if (old !== url) {
+                $persistentStore.write(url, "TuyoKYC_LastURL");
+
+                $notification.post(
+                    "Tuyo KYC",
+                    "已获取 Persona KYC 验证链接",
+                    url
+                );
+            }
+        }
+
+        $done({});
     }
 } catch (e) {
-    // 静默处理
+    console.log("[Tuyo KYC] error: " + e);
+    $done({});
 }
-
-$done({});
