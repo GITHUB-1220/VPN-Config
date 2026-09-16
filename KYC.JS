@@ -1,43 +1,11 @@
-var status = $response.status;
-var headers = $response.headers || {};
 var body = $response.body;
 
-var contentType =
-    headers["Content-Type"] ||
-    headers["content-type"] ||
-    "";
-
-var bodyText = body ? String(body) : "";
-var bodyLength = bodyText.length;
-
-console.log("========== TUYO KYC DEBUG ==========");
-console.log("status = " + status);
-console.log("content-type = " + contentType);
-console.log("body length = " + bodyLength);
-console.log("body = " + bodyText);
-console.log("====================================");
-
-if (bodyLength === 0) {
-
-    $notification.post(
-        "Tuyo KYC",
-        "响应 Body 为空",
-        "HTTP " + status + " / " + contentType
-    );
-
-    $done({});
-    return;
-}
-
 try {
-
-    var data = JSON.parse(bodyText);
+    var data = JSON.parse(body);
     var kycUrl = null;
 
     if (Array.isArray(data.requirements)) {
-
         for (var i = 0; i < data.requirements.length; i++) {
-
             var item = data.requirements[i];
 
             if (
@@ -52,40 +20,26 @@ try {
     }
 
     if (kycUrl) {
+        console.log("[Tuyo KYC] Found URL:");
+        console.log(kycUrl);
 
-        // 测试阶段：每次都通知，不做去重
         $notification.post(
             "Tuyo KYC",
-            "找到 KYC 链接",
+            "获取成功",
             kycUrl
         );
-
-        console.log("KYC URL = " + kycUrl);
-
     } else {
-
-        $notification.post(
-            "Tuyo KYC",
-            "没有找到 Persona URL",
-            "HTTP " + status +
-            " / Body " + bodyLength + " 字节"
-        );
-
-        console.log(
-            "requirements = " +
-            JSON.stringify(data.requirements)
-        );
+        console.log("[Tuyo KYC] URL not found");
     }
 
 } catch (e) {
+    console.log("[Tuyo KYC] Error: " + e);
 
     $notification.post(
         "Tuyo KYC",
-        "JSON 解析失败",
-        String(e) + " / Body " + bodyLength + " 字节"
+        "脚本异常",
+        String(e)
     );
-
-    console.log("JSON ERROR = " + e);
 }
 
 $done({});
