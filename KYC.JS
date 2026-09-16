@@ -1,39 +1,70 @@
-var body = $response.body;
+const body = $response.body;
 
 try {
-    var data = JSON.parse(body);
-    var inquiryId = null;
+    let text = body || "";
+    let inquiryId = null;
 
-    if (Array.isArray(data.requirements)) {
-        for (var i = 0; i < data.requirements.length; i++) {
-            var item = data.requirements[i];
+    // 方式一：从 JSON 中递归寻找 inq_...
+    function findInquiry(obj) {
+        if (!obj || typeof obj !== "object") return null;
 
-            if (item && typeof item.url === "string") {
-                var match = item.url.match(/inq_[A-Za-z0-9]+/);
+        if (typeof obj === "string") {
+            const m = obj.match(/inq_[A-Za-z0-9]+/);
+            return m ? m[0] : null;
+        }
 
-                if (match) {
-                    inquiryId = match[0];
-                    break;
-                }
+        if (Array.isArray(obj)) {
+            for (const item of obj) {
+                const result = findInquiry(item);
+                if (result) return result;
             }
+        } else {
+            for (const key in obj) {
+                const result = findInquiry(obj[key]);
+                if (result) return result;
+            }
+        }
+
+        return null;
+    }
+
+    try {
+        const data = JSON.parse(text);
+        inquiryId = findInquiry(data);
+    } catch (_) {}
+
+    // 方式二：直接从响应文本中找 inq_...
+    if (!inquiryId) {
+        const match = text.match(/inq_[A-Za-z0-9]+/);
+        if (match) {
+            inquiryId = match[0];
         }
     }
 
     if (inquiryId) {
-        var kycUrl =
-            "https://tuyo.withpersona.com/inquiry?inquiry-id=inquiries/" +
+        const kycUrl =
+            "https://tuyo.withpersona.com/inquiry?inquiry-id=" +
             inquiryId;
 
-        $notification.post(
-            "Tuyo KYC",
-            "已获取 KYC 链接",
-            kycUrl
-        );
+        const key = "TuyoKYC_InquiryURL_Last";
+        const lastUrl = $prefs.valueForKey(key);
 
-        console.log("Tuyo KYC URL: " + kycUrl);
+        // 只在新链接出现时通知
+        if (lastUrl !== kycUrl) {
+            $prefs.setValueForKey(key, kycUrl);
+
+            $notify(
+                "Tuyo KYC",
+                "发现新的 Persona KYC",
+                kycUrl
+            );
+
+            console.log("Tuyo Persona KYC: " + kycUrl);
+        }
     }
 
 } catch (e) {
+    // 错误静默，不弹通知
     console.log("TuyoKYC Error: " + e);
 }
 
