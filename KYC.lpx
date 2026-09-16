@@ -1,5 +1,10 @@
-[Script]
-response if ${url} ~= /^https:\/\/api\.tuyo\.com\/account\/verification(?:\?.*)?$/i && ${response.status} == 200 then script("https://raw.githubusercontent.com/GITHUB-1220/VPN-Config/refs/heads/main/KYC.JS") with tag="Tuyo KYC", requires_body=true
+#!name = Tuyo KYC
+#!desc = 获取 Tuyo KYC Persona 验证链接
+#!author = GITHUB-1220
+#!loon_version = 3.5.1(983)
 
-[Mitm]
+[Script]
+response if ${url} ~= /^https:\/\/api\.tuyo\.com\/account\/verification(?:\?.*)?$/i then script("https://raw.githubusercontent.com/GITHUB-1220/VPN-Config/main/KYC.JS") with tag="Tuyo KYC", requires_body=true, timeout=20
+
+[MitM]
 hostname = api.tuyo.com
