@@ -8,31 +8,34 @@ try {
     }
 
     const data = JSON.parse(String(body));
-    let url = "";
+    let inquiryId = "";
 
-    if (Array.isArray(data.requirements)) {
+    // 从响应中寻找 Inquiry ID
+    if (data && typeof data.id === "string" && /^inq_[A-Za-z0-9]+$/.test(data.id)) {
+        inquiryId = data.id;
+    }
+
+    if (!inquiryId && data && Array.isArray(data.requirements)) {
         for (const item of data.requirements) {
-            if (
-                item &&
-                typeof item.url === "string" &&
-                /tuyo\.withpersona\.com\/verify/i.test(item.url)
-            ) {
-                url = item.url;
+            if (item && typeof item.id === "string" &&
+                /^inq_[A-Za-z0-9]+$/.test(item.id)) {
+                inquiryId = item.id;
                 break;
             }
         }
     }
 
-    if (url) {
-        console.log("[Tuyo KYC] 找到链接: " + url);
+    if (inquiryId) {
+        console.log("[Tuyo KYC] Inquiry ID: " + inquiryId);
 
+        // 每次发现都通知，不去重
         $notification.post(
             "Tuyo KYC",
-            "发现 KYC 验证链接",
-            url
+            "发现 Inquiry ID",
+            inquiryId
         );
     } else {
-        console.log("[Tuyo KYC] 没有找到 KYC 链接");
+        console.log("[Tuyo KYC] 没有找到 Inquiry ID");
     }
 
 } catch (e) {
