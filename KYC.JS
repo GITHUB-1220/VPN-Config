@@ -2,42 +2,45 @@ const body = $response && $response.body;
 
 try {
     if (!body) {
-        console.log("[Tuyo KYC] 没有 response body");
+        console.log("[Tuyo KYC] No response body");
         $done({});
         return;
     }
 
     const text = String(body);
 
-    // 提取 Inquiry ID
+    // Extract Inquiry ID
     const match = text.match(/\binq_[A-Za-z0-9]+\b/);
 
     if (!match) {
-        console.log("[Tuyo KYC] 没有找到 Inquiry ID");
+        console.log("[Tuyo KYC] Inquiry ID not found");
         $done({});
         return;
     }
 
     const inquiryId = match[0];
 
+    // Get current time: HH.MM.SS
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mm = String(now.getMinutes()).padStart(2, "0");
+    const ss = String(now.getSeconds()).padStart(2, "0");
+    const time = `${hh}.${mm}.${ss}`;
+
+    console.log("[Tuyo KYC] Time: " + time);
     console.log("[Tuyo KYC] Inquiry ID: " + inquiryId);
+    console.log("[Tuyo KYC] Inquiry ID extraction completed.");
 
-    // 按指定格式进行字符串拼接
-    const inquiryUrl =
-        "https://tuyo.withpersona.com/inquiry?inquiry-id=" + inquiryId;
-
-    console.log("[Tuyo KYC] 拼接结果: " + inquiryUrl);
-
-    // 每次发现都通知，不去重
+    // Notify every time; no deduplication
     $notification.post(
         "Tuyo KYC",
-        "发现新的 Inquiry",
-        inquiryUrl
+        "New Inquiry ID detected",
+        inquiryId
     );
 
 } catch (e) {
-    // 错误静默，仅写日志
-    console.log("[Tuyo KYC] 解析失败: " + e);
+    // Errors are logged only; no error notification
+    console.log("[Tuyo KYC] Parse error: " + e);
 }
 
 $done({});
