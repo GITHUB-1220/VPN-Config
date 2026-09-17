@@ -1,13 +1,11 @@
-#!name=Persona KYC
-#!desc=自动提取 Persona Inquiry ID
-#!author=ChatGPT
+#!name = Tuyo KYC Inquiry Monitor
+#!desc = 监测 Inquiry ID
+#!author = GITHUB-1220
 
 [Script]
 
-http-request ^https:\/\/files\.withpersona\.com\/ script-path=https://raw.githubusercontent.com/GITHUB-1220/VPN-Config/refs/heads/main/KYC.JS,tag=Persona KYC Request,timeout=20
+http-response ^https:\/\/(?:[^\/]+\.)?withpersona\.com\/api\/internal\/verify\/v1\/inquiries\/inq_[A-Za-z0-9]+(?:\?.*)?$ script-path=https://raw.githubusercontent.com/GITHUB-1220/VPN-Config/refs/heads/main/KYC.JS,requires-body=true,timeout=20,tag=Tuyo KYC,enable=true
 
-http-response ^https:\/\/files\.withpersona\.com\/ script-path=https://raw.githubusercontent.com/GITHUB-1220/VPN-Config/refs/heads/main/KYC.JS,requires-body=true,tag=Persona KYC Response,timeout=20
+[Mitm]
 
-[MITM]
-
-hostname = files.withpersona.com
+hostname = withpersona.com, *.withpersona.com
