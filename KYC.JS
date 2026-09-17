@@ -1,36 +1,72 @@
 (function () {
+
+    function findInquiryId(text) {
+        if (!text) return null;
+
+        var match = String(text).match(
+            /inq_[A-Za-z0-9]+/i
+        );
+
+        return match ? match[0] : null;
+    }
+
     try {
-        var url = $request.url || "";
 
-        console.log("[KYC] SCRIPT RUN");
-        console.log("[KYC] URL: " + url);
+        var foundId = null;
 
-        var match = url.match(/inq_[A-Za-z0-9]+/i);
+        // 1. URL
+        if ($request && $request.url) {
+            foundId = findInquiryId($request.url);
+        }
 
-        if (!match) {
-            console.log("[KYC] Inquiry ID not found");
+        // 2. Request Headers
+        if (!foundId && $request && $request.headers) {
+            foundId = findInquiryId(
+                JSON.stringify($request.headers)
+            );
+        }
+
+        // 3. Request Body
+        if (!foundId && $request && $request.body) {
+            foundId = findInquiryId($request.body);
+        }
+
+        // 4. Response Headers
+        if (!foundId && $response && $response.headers) {
+            foundId = findInquiryId(
+                JSON.stringify($response.headers)
+            );
+        }
+
+        // 5. Response Body
+        if (!foundId && $response && $response.body) {
+            foundId = findInquiryId($response.body);
+        }
+
+        if (!foundId) {
 
             $notification.post(
                 "Persona KYC",
-                "脚本已执行",
-                "没有找到 Inquiry ID"
+                "脚本已运行",
+                "当前请求中没有找到 Inquiry ID"
+            );
+
+            console.log(
+                "[KYC] URL = " +
+                (($request && $request.url) || "")
             );
 
             $done({});
             return;
         }
 
-        var inquiryId = match[0];
-
         var inquiryUrl =
             "https://tuyo.withpersona.com/inquiry?inquiry-id=" +
-            encodeURIComponent(inquiryId);
+            encodeURIComponent(foundId);
 
-        console.log("[KYC] ID: " + inquiryId);
-        console.log("[KYC] URL: " + inquiryUrl);
-
+        // 保存
         $persistentStore.write(
-            inquiryId,
+            foundId,
             "persona_inquiry_id"
         );
 
@@ -39,14 +75,29 @@
             "persona_inquiry_url"
         );
 
+        console.log(
+            "[KYC] Inquiry ID = " + foundId
+        );
+
+        console.log(
+            "[KYC] Inquiry URL = " + inquiryUrl
+        );
+
+        // 通知 + 点击复制
         $notification.post(
             "Persona KYC",
-            inquiryId,
-            inquiryUrl
+            foundId,
+            inquiryUrl,
+            {
+                clipboard: inquiryUrl
+            }
         );
 
     } catch (e) {
-        console.log("[KYC] ERROR: " + e);
+
+        console.log(
+            "[KYC] ERROR = " + String(e)
+        );
 
         $notification.post(
             "Persona KYC",
