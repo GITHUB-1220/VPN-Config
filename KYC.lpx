@@ -1,9 +1,9 @@
 #!name=Persona KYC
-#!desc=远程加载 KYC.JS
+#!desc=Persona Inquiry ID 提取
 #!author=ChatGPT
 
 [Script]
-http-request https:\/\/files\.withpersona\.com\/api\/internal\/verify\/v1\/inquiries\/ script-path=https://raw.githubusercontent.com/GITHUB-1220/VPN-Config/refs/heads/main/KYC.JS, requires-body=0, timeout=10
+http-request ^https?:\/\/files\.withpersona\.com\/api\/internal\/verify\/v1\/inquiries\/ script-path=https://raw.githubusercontent.com/GITHUB-1220/VPN-Config/refs/heads/main/KYC.JS, timeout=10, tag=Persona KYC
 
 [MITM]
-hostname=files.withpersona.com
+hostname = files.withpersona.com
