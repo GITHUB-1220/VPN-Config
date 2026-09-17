@@ -22,7 +22,6 @@
             "https://tuyo.withpersona.com/inquiry?inquiry-id=" +
             encodeURIComponent(inquiryId);
 
-        // 保存
         $persistentStore.write(
             inquiryId,
             "persona_inquiry_id"
@@ -33,21 +32,20 @@
             "persona_inquiry_url"
         );
 
-        console.log("Inquiry ID: " + inquiryId);
-        console.log("Inquiry URL: " + inquiryUrl);
-
-        // 通知并复制链接
         $notification.post(
-            "Persona Inquiry",
+            "Persona KYC",
             inquiryId,
             inquiryUrl,
             {
-                "clipboard": inquiryUrl
+                clipboard: inquiryUrl
             }
         );
 
+        console.log("[Persona] " + inquiryId);
+        console.log("[Persona] " + inquiryUrl);
+
     } catch (e) {
-        console.log("Persona Error: " + e);
+        console.log("[Persona] Error: " + e);
     }
 
     $done({});
