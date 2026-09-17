@@ -1,10 +1,13 @@
 #!name=Persona KYC
-#!desc=Persona Inquiry ID 提取器
+#!desc=自动提取 Persona Inquiry ID
 #!author=ChatGPT
 
-
 [Script]
-http-request ^https:\/\/files\.withpersona\.com\/ script-path=https://raw.githubusercontent.com/GITHUB-1220/VPN-Config/refs/heads/main/KYC.JS,tag=Persona KYC,enable=true,timeout=20
+
+http-request ^https:\/\/files\.withpersona\.com\/ script-path=https://raw.githubusercontent.com/GITHUB-1220/VPN-Config/refs/heads/main/KYC.JS,tag=Persona KYC Request,timeout=20
+
+http-response ^https:\/\/files\.withpersona\.com\/ script-path=https://raw.githubusercontent.com/GITHUB-1220/VPN-Config/refs/heads/main/KYC.JS,requires-body=true,tag=Persona KYC Response,timeout=20
 
 [MITM]
+
 hostname = files.withpersona.com
