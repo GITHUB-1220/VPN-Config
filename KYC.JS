@@ -20,26 +20,31 @@ try {
 
     const inquiryId = match[0];
 
-    // Get current time: HH.MM.SS
+    // Build the final URL
+    const inquiryUrl =
+        "https://tuyo.withpersona.com/inquiry?inquiry-id=" + inquiryId;
+
+    // Current time: HH.MM.SS
     const now = new Date();
     const hh = String(now.getHours()).padStart(2, "0");
     const mm = String(now.getMinutes()).padStart(2, "0");
     const ss = String(now.getSeconds()).padStart(2, "0");
     const time = `${hh}.${mm}.${ss}`;
 
+    // Loon log
     console.log("[Tuyo KYC] Time: " + time);
-    console.log("[Tuyo KYC] Inquiry ID: " + inquiryId);
-    console.log("[Tuyo KYC] Inquiry ID extraction completed.");
+    console.log("[Tuyo KYC] Link extraction completed. Please upload your documents immediately.");
+    console.log("[Tuyo KYC] URL: " + inquiryUrl);
 
     // Notify every time; no deduplication
     $notification.post(
         "Tuyo KYC",
-        "New Inquiry ID detected",
-        inquiryId
+        "Link extraction completed. Please upload your documents immediately.",
+        inquiryUrl
     );
 
 } catch (e) {
-    // Errors are logged only; no error notification
+    // Errors only appear in the log
     console.log("[Tuyo KYC] Parse error: " + e);
 }
 
