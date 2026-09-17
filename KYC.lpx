@@ -1,5 +1,5 @@
 #!name=Persona KYC
-#!desc=Persona Inquiry ID 提取
+#!desc=自动提取 Persona Inquiry ID 并生成 Tuyo 链接
 #!author=ChatGPT
 
 [Script]
