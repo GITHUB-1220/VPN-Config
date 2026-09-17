@@ -1,55 +1,84 @@
 (function () {
-    const URL_PREFIX =
-        "https://tuyo.withpersona.com/inquiry?inquiry-id=";
 
     try {
-        const requestUrl = $request.url || "";
 
-        // 提取 Persona Inquiry ID
-        const match = requestUrl.match(
-            /\/inquiries\/(inq_[A-Za-z0-9]+)/i
-        );
+        console.log("[KYC] ===== SCRIPT START =====");
+
+        var url = "";
+
+        if ($request && $request.url) {
+            url = $request.url;
+        }
+
+        console.log("[KYC] URL = " + url);
+
+        // 提取任何 inq_ 开头的 ID
+        var match = url.match(/inq_[A-Za-z0-9]+/i);
 
         if (!match) {
-            console.log("[KYC] 未找到 Inquiry ID");
+
+            console.log("[KYC] 没有找到 Inquiry ID");
+
+            $notification.post(
+                "Persona KYC",
+                "脚本已执行",
+                "但是没有找到 Inquiry ID"
+            );
+
             $done({});
             return;
         }
 
-        const inquiryId = match[1];
+        var inquiryId = match[0];
 
-        // 生成 Tuyo 链接
-        const inquiryUrl =
-            URL_PREFIX + encodeURIComponent(inquiryId);
+        console.log(
+            "[KYC] Inquiry ID = " + inquiryId
+        );
 
-        // 保存 Inquiry ID
+        var inquiryUrl =
+            "https://tuyo.withpersona.com/inquiry?inquiry-id=" +
+            encodeURIComponent(inquiryId);
+
+        console.log(
+            "[KYC] Inquiry URL = " + inquiryUrl
+        );
+
+        // 保存 ID
         $persistentStore.write(
             inquiryId,
             "persona_inquiry_id"
         );
 
-        // 保存完整 URL
+        // 保存 URL
         $persistentStore.write(
             inquiryUrl,
             "persona_inquiry_url"
         );
 
-        console.log("[KYC] Inquiry ID: " + inquiryId);
-        console.log("[KYC] URL: " + inquiryUrl);
-
-        // 通知 + 复制到剪贴板
+        // 通知
         $notification.post(
-            "KYC Inquiry",
+            "Persona Inquiry",
             inquiryId,
-            inquiryUrl,
-            {
-                clipboard: inquiryUrl
-            }
+            inquiryUrl
         );
 
-    } catch (error) {
-        console.log("[KYC] Error: " + error);
+        console.log(
+            "[KYC] ===== SUCCESS ====="
+        );
+
+    } catch (e) {
+
+        console.log(
+            "[KYC] ERROR = " + e
+        );
+
+        $notification.post(
+            "Persona KYC Error",
+            "脚本执行异常",
+            String(e)
+        );
     }
 
     $done({});
+
 })();
