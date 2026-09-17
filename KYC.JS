@@ -1,39 +1,45 @@
 (function () {
-    try {
-        const url = $request.url || "";
+    const URL_PREFIX =
+        "https://tuyo.withpersona.com/inquiry?inquiry-id=";
 
-        const match = url.match(
-            /\/api\/internal\/verify\/v1\/inquiries\/([^/?#]+)/i
+    try {
+        const requestUrl = $request.url || "";
+
+        // 提取 Persona Inquiry ID
+        const match = requestUrl.match(
+            /\/inquiries\/(inq_[A-Za-z0-9]+)/i
         );
 
         if (!match) {
+            console.log("[KYC] 未找到 Inquiry ID");
             $done({});
             return;
         }
 
-        const inquiryId = decodeURIComponent(match[1]);
+        const inquiryId = match[1];
 
-        if (!/^inq_[A-Za-z0-9]+$/.test(inquiryId)) {
-            $done({});
-            return;
-        }
-
+        // 生成 Tuyo 链接
         const inquiryUrl =
-            "https://tuyo.withpersona.com/inquiry?inquiry-id=" +
-            encodeURIComponent(inquiryId);
+            URL_PREFIX + encodeURIComponent(inquiryId);
 
+        // 保存 Inquiry ID
         $persistentStore.write(
             inquiryId,
             "persona_inquiry_id"
         );
 
+        // 保存完整 URL
         $persistentStore.write(
             inquiryUrl,
             "persona_inquiry_url"
         );
 
+        console.log("[KYC] Inquiry ID: " + inquiryId);
+        console.log("[KYC] URL: " + inquiryUrl);
+
+        // 通知 + 复制到剪贴板
         $notification.post(
-            "Persona KYC",
+            "KYC Inquiry",
             inquiryId,
             inquiryUrl,
             {
@@ -41,11 +47,8 @@
             }
         );
 
-        console.log("[Persona] " + inquiryId);
-        console.log("[Persona] " + inquiryUrl);
-
-    } catch (e) {
-        console.log("[Persona] Error: " + e);
+    } catch (error) {
+        console.log("[KYC] Error: " + error);
     }
 
     $done({});
