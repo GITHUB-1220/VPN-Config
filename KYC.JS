@@ -1,44 +1,54 @@
-// Tuyo KYC - Loon
-const body = $response && $response.body;
+(function () {
+    try {
+        const url = $request.url || "";
 
-try {
-    console.log("[Tuyo KYC] triggered");
+        const match = url.match(
+            /\/api\/internal\/verify\/v1\/inquiries\/([^/?#]+)/i
+        );
 
-    if (!body) {
-        console.log("[Tuyo KYC] empty response body");
-        $done({});
-    } else {
-        const data = JSON.parse(String(body));
-        let url = "";
+        if (!match) {
+            $done({});
+            return;
+        }
 
-        if (Array.isArray(data.requirements)) {
-            for (const item of data.requirements) {
-                if (
-                    item &&
-                    typeof item.url === "string" &&
-                    /tuyo\.withpersona\.com\/verify/i.test(item.url)
-                ) {
-                    url = item.url;
-                    break;
-                }
+        const inquiryId = decodeURIComponent(match[1]);
+
+        if (!/^inq_[A-Za-z0-9]+$/.test(inquiryId)) {
+            $done({});
+            return;
+        }
+
+        const inquiryUrl =
+            "https://tuyo.withpersona.com/inquiry?inquiry-id=" +
+            encodeURIComponent(inquiryId);
+
+        // 保存
+        $persistentStore.write(
+            inquiryId,
+            "persona_inquiry_id"
+        );
+
+        $persistentStore.write(
+            inquiryUrl,
+            "persona_inquiry_url"
+        );
+
+        console.log("Inquiry ID: " + inquiryId);
+        console.log("Inquiry URL: " + inquiryUrl);
+
+        // 通知并复制链接
+        $notification.post(
+            "Persona Inquiry",
+            inquiryId,
+            inquiryUrl,
+            {
+                "clipboard": inquiryUrl
             }
-        }
+        );
 
-        if (url) {
-            console.log("[Tuyo KYC] URL: " + url);
-
-            $notification.post(
-                "Tuyo KYC",
-                "已获取 Persona KYC 验证链接",
-                url
-            );
-        } else {
-            console.log("[Tuyo KYC] Persona URL not found");
-        }
-
-        $done({});
+    } catch (e) {
+        console.log("Persona Error: " + e);
     }
-} catch (e) {
-    console.log("[Tuyo KYC] error: " + e);
+
     $done({});
-}
+})();
